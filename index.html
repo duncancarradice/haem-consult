@@ -1,0 +1,1573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Haem Consult Live</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2'"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/jspdf@4.2.1/dist/jspdf.umd.min.js'"></script>
+<style>
+:root{--purple:#6f3f7d;--purple2:#55305f;--green:#b7d36b;--blue:#66bddf;--lime:#d4dc39;--ink:#2f3338;--muted:#6d737a;--line:#e4e6e8;--bg:#f6f7f8;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+header{background:linear-gradient(135deg,var(--purple2),var(--purple));color:white;padding:18px 22px;position:sticky;top:0;z-index:3}
+header .t{font-size:22px;font-weight:700}header .s{font-size:12px;opacity:.88;margin-top:3px}
+.shell{max-width:1200px;margin:auto;padding:18px}.notice{background:#fff7e6;border:1px solid #ead89c;padding:10px 12px;border-radius:10px;font-size:12px;margin-bottom:12px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}.tab{border:0;background:white;padding:10px 14px;border-radius:999px;font-weight:700;cursor:pointer}.tab.active{background:var(--purple);color:white}
+.panel{display:none}.panel.active{display:block}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 8px #0001}h2,h3{margin:0 0 12px}label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #cfd3d6;border-radius:9px;background:white;font:inherit}textarea{min-height:86px;resize:vertical}
+.row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:650px){.row,.row3{grid-template-columns:1fr}}
+.btn{border:0;border-radius:9px;padding:11px 14px;font-weight:700;cursor:pointer}.primary{background:var(--purple);color:white}.secondary{background:#eef0f1}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.small{font-size:12px;color:var(--muted)}.tiny{font-size:11px;color:var(--muted)}.k{font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.08em}
+.result{border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:10px;background:white}.score{font-size:22px;font-weight:800;color:var(--purple)}.consultant{background:#faf7fb;border-left:4px solid var(--purple);padding:10px 12px;border-radius:8px;margin-top:8px}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#eef0f1;margin:2px 4px 2px 0}.g{background:#eef6df}.b{background:#e9f6fb}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);vertical-align:top}th{font-size:11px;text-transform:uppercase;color:var(--muted)}
+.statline{display:flex;gap:10px;flex-wrap:wrap}.stat{flex:1;min-width:140px;background:white;border:1px solid var(--line);border-radius:12px;padding:13px}.n{font-size:24px;font-weight:800}
+.ok{color:#2f7d62}.err{color:#a83343}.statusdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;background:#aaa}.statusdot.live{background:#3f9b72}
+
+.modalbackdrop{display:none;position:fixed;inset:0;background:#0008;z-index:20;align-items:center;justify-content:center;padding:20px}
+.modalbackdrop.open{display:flex}
+.modal{background:white;border-radius:16px;max-width:620px;width:100%;max-height:82vh;overflow:auto;padding:18px;box-shadow:0 18px 60px #0005}
+.consultant-choice{display:block;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;cursor:pointer}
+.consultant-choice:hover{background:#faf7fb;border-color:#cdbbd4}
+.consultant-choice input{width:auto;margin-right:9px}
+
+.guideline-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+@media(max-width:700px){.guideline-grid{grid-template-columns:repeat(2,1fr)}}
+.gmetric{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fafafa}
+.gmetric .gv{font-size:20px;font-weight:800;color:var(--purple)}
+.gsource{border-top:1px solid var(--line);padding:9px 0}
+.gprop{display:grid;grid-template-columns:1fr 70px 120px 120px;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:12px}
+@media(max-width:700px){.gprop{grid-template-columns:1fr}.gprop>div:not(:first-child){padding-left:8px}}
+.gtag{display:inline-block;border-radius:999px;padding:3px 7px;background:#eef0f1;font-size:11px}
+
+
+.archive-head{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;cursor:pointer}
+.archive-head:hover{background:#faf7fb;border-radius:10px}
+.archive-open{white-space:nowrap}
+
+
+.analysis-status{display:inline-block;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:#eef0f1}
+.analysis-status.running{background:#fff3cd}
+.analysis-status.complete{background:#eef6df}
+.analysis-status.error{background:#fdecef}
+
+
+.privacy-box{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px;background:#fafafa}
+.privacy-green{background:#eef6df;border-color:#c8dda1}
+.privacy-amber{background:#fff7df;border-color:#e2c675}
+.privacy-red{background:#fdecef;border-color:#e0a4ae}
+.privacy-finding{padding:9px 0;border-top:1px solid #0001}
+.privacy-fragment{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#fff;padding:2px 5px;border-radius:5px}
+
+.cpd-float{display:none;position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;max-width:760px;width:calc(100% - 28px);background:#fff;border:2px solid var(--purple);border-radius:14px;padding:12px 14px;box-shadow:0 12px 38px #0003}
+.cpd-float.open{display:block}.cpd-time{font-size:20px;font-weight:800;color:var(--purple)}.cpd-paused{color:#9a6a15}.cpd-live{color:#2f7d62}
+
+.cpd-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+@media(max-width:700px){.cpd-summary{grid-template-columns:1fr}}
+.cpd-event{border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:9px;background:#fff}
+.cpd-event.confirmed{border-left:4px solid #3f9b72}.cpd-event.draft{border-left:4px solid #d6a32c}.cpd-event.excluded{opacity:.7;border-left:4px solid #999}
+.cpd-map{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.cpd-map .badge{margin:0}
+.cpd-domain-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:7px}
+@media(max-width:600px){.cpd-domain-grid{grid-template-columns:1fr}}
+.cpd-check{display:flex;gap:8px;align-items:flex-start;border:1px solid var(--line);padding:8px 9px;border-radius:9px;background:#fafafa;font-size:12px}
+.cpd-check input{width:auto;margin-top:2px}
+.cpd-progress-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px}
+@media(max-width:800px){.cpd-progress-grid{grid-template-columns:1fr}}
+.progress-card{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafafa}
+.progress-row{display:grid;grid-template-columns:145px 1fr 72px;gap:8px;align-items:center;margin-top:8px;font-size:12px}
+@media(max-width:600px){.progress-row{grid-template-columns:1fr}.progress-row .progress-value{text-align:left}}
+.progress-track{height:9px;background:#e9ecef;border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;background:var(--purple);border-radius:999px}
+.progress-value{text-align:right;font-weight:700}
+.practice-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+@media(max-width:760px){.practice-grid{grid-template-columns:1fr}}
+.practice-metric{border:1px solid var(--line);border-radius:11px;padding:11px;background:#fafafa}
+.practice-metric .pv{font-size:22px;font-weight:800;color:var(--purple);margin-top:3px}
+.decision-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.decision-box{border:1px solid var(--line);border-radius:9px;padding:9px;text-align:center;background:white}
+.decision-box b{font-size:18px;color:var(--purple)}
+.practice-note{border:1px solid #d8d1df;background:#faf7fb;border-radius:10px;padding:10px 12px;margin-top:10px}
+.practice-withheld{border:1px solid #ead89c;background:#fff7e6;border-radius:10px;padding:10px 12px;margin-top:10px}
+.practice-table{margin-top:8px}
+
+.yearend-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:12px;margin-top:12px}
+@media(max-width:800px){.yearend-grid{grid-template-columns:1fr}}
+.requirement-list{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-top:9px}
+@media(max-width:620px){.requirement-list{grid-template-columns:1fr}}
+.requirement-item{border:1px solid var(--line);border-radius:9px;padding:9px;background:#fafafa;font-size:12px}
+.requirement-item.okay{border-left:4px solid #3f9b72}.requirement-item.pending{border-left:4px solid #d6a32c}
+.statement-item{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px;background:#fff}
+.statement-hash{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;font-size:10px;color:var(--muted)}
+
+</style>
+</head>
+<body>
+<header><div class="t">Haem Consult Live</div><div class="s">Authenticated Supabase test build · verified Victorian health-service email · Build 2026-08-21-1711</div></header>
+<div class="shell">
+<div class="notice"><b>TEST ENVIRONMENT ONLY:</b> use fictitious or fully de-identified clinical data. Login applications use one-time email verification followed by email + password login. Clinical data remains test-only until the hosting/callback configuration and governance are finalised.</div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
+<div id="conn" class="small"><span class="statusdot"></span>Connecting…</div>
+<div id="authStatus" class="small">Not signed in</div>
+<button id="testModeBtn" class="btn secondary" style="display:none;padding:7px 11px" onclick="toggleTestMode()">Enter Test Trainee Mode</button>
+<button id="signOutBtn" class="btn secondary" style="display:none;padding:7px 11px" onclick="signOut()">Sign out</button>
+</div>
+<div id="passwordCard" class="card" style="display:none;margin:12px 0">
+<div class="k">Account security</div>
+<h2 id="passwordTitle">Set your password</h2>
+<div id="passwordHelp" class="small">Your verified health-service email will be your username. Choose a password for future logins.</div>
+<div class="row">
+<div><label>New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="10"></div>
+<div><label>Confirm password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="10"></div>
+</div>
+<div class="toolbar"><button class="btn primary" onclick="setAccountPassword()">Save password</button></div>
+<div id="passwordResult" style="margin-top:10px"></div>
+</div>
+<div class="tabs">
+<button class="tab active" data-tab="apply" onclick="switchTab('apply')">Apply for login</button>
+<button class="tab" data-tab="new" onclick="switchTab('new')">New consult</button>
+<button class="tab" data-tab="review" onclick="switchTab('review')">Consultant review</button>
+<button class="tab" data-tab="archive" onclick="switchTab('archive')">Case archive</button>
+<button class="tab" data-tab="profiles" onclick="switchTab('profiles')">Profiles</button>
+<button class="tab" data-tab="cpd" onclick="switchTab('cpd')">My Practice / CPD</button>
+<button class="tab" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+</div>
+
+
+<section id="apply" class="panel active">
+<div class="grid">
+  <div class="card">
+    <div class="k">Access application</div>
+    <h2>Apply for a Haem Consult profile</h2>
+    <div class="small">For Victorian health-service haematology trainees and consultants. Your health-service email domain must be on the approved list.</div>
+    <div class="row">
+      <div><label>First name only</label><input id="applyFirstName" placeholder="Anna"></div>
+      <div><label>Initials ID</label><input id="applyInitials" placeholder="AMB" maxlength="6" style="text-transform:uppercase"></div>
+    </div>
+    <label>Victorian health-service email</label>
+    <input id="applyEmail" type="email" placeholder="anna.brown@wh.org.au" oninput="checkEmailDomain()">
+    <div id="domainCheck" class="tiny" style="margin-top:5px"></div>
+    <div class="row">
+      <div><label>Role</label><select id="applyRole" onchange="renderExperienceOptions()"><option>Trainee</option><option>Consultant</option></select></div>
+      <div><label id="experienceLabel">Year of haematology training</label><select id="applyExperience"></select></div>
+    </div>
+    <div class="toolbar"><button class="btn primary" onclick="applyForLogin()">Apply & verify email</button></div>
+    <div id="applyResult" style="margin-top:12px"></div>
+<hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+<div class="k">Already registered?</div>
+<h3 style="margin-top:5px">Sign in</h3>
+<label>Health-service email</label>
+<input id="loginEmail" type="email" placeholder="name@wh.org.au" autocomplete="username">
+<label>Password</label>
+<input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password">
+<div class="toolbar">
+<button class="btn secondary" onclick="passwordLogin()">Sign in</button>
+<button class="btn secondary" onclick="forgotPassword()">Forgot password?</button>
+</div>
+<div id="loginResult" style="margin-top:10px"></div>
+
+    <div class="tiny" style="margin-top:14px"><b>Prototype note:</b> this creates an approved profile after domain validation. Email ownership verification / magic-link sign-in will be the next security step.</div>
+  </div>
+  <div class="card">
+    <div class="k">Approved organisations</div>
+    <h2>Accepted email domains</h2>
+    <div class="small">Loaded live from the Supabase allowlist. Applications from other domains are rejected by the database.</div>
+    <div id="domainList" style="margin-top:12px"></div>
+  </div>
+</div>
+</section>
+
+<section id="new" class="panel">
+<div id="testBanner" class="notice" style="display:none;margin-bottom:12px"><b>TEST TRAINEE MODE:</b> Cases submitted here are attributed to TESTT1. Use dummy/de-identified information only.</div><div class="grid">
+<div class="card"><div class="k">Trainee view</div><h2>Enter consult</h2>
+<div class="row"><div><label>Current trainee</label><select id="traineeUser"></select></div><div><label>Next case ID</label><input id="nextCaseId" readonly></div></div>
+<div class="row3">
+<div><label>Problem / diagnosis</label><input id="problem" list="dxlist" value="Pulmonary embolism — I26"></div>
+<div><label>Age band</label><select id="age"><option>18–39</option><option>40–59</option><option selected>60–79</option><option>80+</option></select></div>
+<div><label>Setting</label><select id="setting"><option>ED</option><option selected>Inpatient</option><option>Outpatient</option><option>Oncology</option><option>Perioperative</option></select></div>
+</div>
+<datalist id="dxlist">
+<option value="Pulmonary embolism — I26"><option value="Deep vein thrombosis / venous thrombosis — I82"><option value="Immune thrombocytopenia / primary thrombocytopenia — D69.3">
+<option value="Thrombocytopenia, unspecified — D69.6"><option value="Iron deficiency anaemia — D50.9"><option value="Anaemia, unspecified — D64.9">
+<option value="Haemophilia A — D66"><option value="Haemophilia B — D67"><option value="von Willebrand disease — D68.0"><option value="Neutropenia — D70">
+<option value="Antiphospholipid syndrome"><option value="TTP"><option value="Acquired haemophilia"><option value="Perioperative anticoagulation management"><option value="Abnormal coagulation screen">
+</datalist>
+<div class="row3"><div><label>Platelets</label><input id="plt" type="number" value="42"></div><div><label>eGFR</label><input id="egfr" type="number" value="72"></div><div><label>Active cancer?</label><select id="cancer"><option>No</option><option selected>Yes</option></select></div></div>
+<div class="row3"><div><label>Active bleeding?</label><select id="bleeding"><option selected>No</option><option>Yes</option></select></div><div><label>Previous VTE?</label><select id="prevVTE"><option selected>No</option><option>Yes</option></select></div><div><label>Current anticoagulant</label><select id="anticoag"><option>None</option><option>Apixaban</option><option>Rivaroxaban</option><option>LMWH</option><option>Warfarin</option></select></div></div>
+<label>Clinical summary</label><textarea id="summary">Metastatic prostate cancer. Incidental segmental pulmonary embolism. Platelets 42, no active bleeding, eGFR normal.</textarea>
+<label>Clinical question</label><input id="question" value="Should this patient be anticoagulated?">
+<label>Trainee proposed management</label><textarea id="trainee">I would anticoagulate, initially with LMWH while platelet count remains above 30.</textarea>
+<div class="row"><div><label>Confidence 1–5</label><select id="confidence"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></div><div><label>Tags</label><input id="tags" value="cancer, thrombocytopenia, PE"></div></div>
+<div class="toolbar"><button class="btn primary" onclick="findSimilar()">Find similar cases</button><button class="btn secondary" onclick="openConsultantSelector()">Submit to consultant</button></div><div id="privacyCheckStatus" class="privacy-box"><b>Privacy check:</b> will run before submission. No case is stored until the check is complete.</div>
+</div>
+<div class="card"><div class="k">Shared similarity search</div><h2>Closest reviewed cases</h2><div class="small">Results are calculated from the live shared database.</div><div id="similar"></div></div>
+</div></section>
+
+<section id="review" class="panel"><div class="grid">
+<div class="card"><div class="k">Consultant queue</div><h2>Awaiting review</h2><div id="queue"></div></div>
+<div class="card"><div class="k">Consultant response</div><h2 id="reviewTitle">Select a case</h2><div id="reviewCase" class="small">Choose a pending case.</div>
+<div id="reviewForm" style="display:none">
+<label>Reviewing consultant</label><select id="consultantUser"></select>
+<label>Decision</label><select id="decision"><option>Agree</option><option>Modify</option><option>Disagree</option></select>
+<label>Consultant management</label><textarea id="management"></textarea>
+<label>Reasoning</label><textarea id="reasoning"></textarea>
+<label>What would change your decision?</label><textarea id="changeDecision"></textarea>
+<div class="toolbar"><button class="btn primary" onclick="saveReview()">Save consultant review</button></div>
+</div></div>
+</div></section>
+
+<section id="archive" class="panel"><div class="card"><div class="k">Institutional memory</div><h2>Case archive</h2><label>Search</label><input id="archiveSearch" oninput="renderArchive()" placeholder="Search IDs, diagnoses, cases, management..."><div id="archiveTable"></div></div></section>
+
+
+<section id="profiles" class="panel">
+<div class="card">
+  <div class="k">User directory</div><h2>Profiles</h2>
+  <div class="small">Profiles are now created only through the approved email application screen.</div>
+  <div id="profileTable" style="margin-top:12px"></div>
+</div>
+</section>
+
+<section id="cpd" class="panel">
+<div class="card">
+  <div class="k">Professional development & practice review</div><h2>My Practice / CPD</h2>
+  <div class="small">Haem Consult records only deliberately timed and clinician-confirmed CPD. College progress below is the contribution captured in Haem Consult, not your complete annual College CPD record.</div>
+  <div class="cpd-summary">
+    <div class="stat"><div class="small">Confirmed Haem Consult CPD</div><div class="n" id="cpdConfirmedHours">0.00 h</div></div>
+    <div class="stat"><div class="small">Draft activities</div><div class="n" id="cpdDraftCount">0</div></div>
+    <div class="stat"><div class="small">Confirmed activities</div><div class="n" id="cpdConfirmedCount">0</div></div>
+  </div>
+  <div class="cpd-progress-grid">
+    <div class="progress-card"><div class="k">RACP 2026</div><h3 style="margin-top:4px">Haem Consult contribution</h3><div id="racpProgress"></div></div>
+    <div class="progress-card"><div class="k">RCPA Australia 2026</div><h3 style="margin-top:4px">Haem Consult contribution</h3><div id="rcpaProgress"></div></div>
+  </div>
+  <div class="tiny" style="margin-top:9px">RACP and RCPA are alternative mappings of the same underlying active time. They are not added together. College minimums are displayed only to give context for your overall annual CPD requirements.</div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+    <div><div class="k">Year-end evidence</div><h2>2026 CPD statement & exports</h2></div>
+    <div style="min-width:150px"><label style="margin-top:0">CPD year</label><select id="cpdYearSelect" onchange="renderCpd()"><option value="2026">2026</option></select></div>
+  </div>
+  <div class="small">Create an immutable year-end snapshot from confirmed Haem Consult CPD. The one-page PDF contains no case diagnoses or patient information; the detailed CSV audit ledger contains only activity metadata and internal evidence references.</div>
+  <div id="cpdYearEndReporting" style="margin-top:10px"></div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="k">Longitudinal practice review</div><h2>My practice patterns</h2>
+  <div class="small">These are descriptive patterns from your Haem Consult cases. Guideline-concordance percentages are summary measures, not percentages “correct”, and Agree/Modify/Disagree patterns are not performance rankings.</div>
+  <div id="practiceAnalytics" style="margin-top:10px"></div>
+</div>
+
+<div class="card" style="margin-top:14px">
+  <div class="k">CPD evidence ledger</div><h2>Activities</h2>
+  <div class="small">Only activities you explicitly confirm are counted. Drafts are timed evidence awaiting your review; excluded records remain in the audit trail but do not contribute hours.</div>
+  <div id="cpdEventList" style="margin-top:10px"></div>
+</div>
+</section>
+
+<section id="dashboard" class="panel">
+<div class="statline"><div class="stat"><div class="small">Cases</div><div class="n" id="nCases">0</div></div><div class="stat"><div class="small">Reviewed</div><div class="n" id="nReviewed">0</div></div><div class="stat"><div class="small">Pending</div><div class="n" id="nPending">0</div></div><div class="stat"><div class="small">Profiles</div><div class="n" id="nProfiles">0</div></div></div>
+</section>
+</div>
+
+<div id="cpdTimer" class="cpd-float" role="status" aria-live="polite">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap">
+    <div>
+      <div class="k">CPD evidence review · draft timing</div>
+      <div id="cpdTimerTitle" style="font-weight:700;margin-top:3px">No active CPD session</div>
+      <div id="cpdTimerState" class="tiny" style="margin-top:4px">Only active, focused time is counted.</div>
+    </div>
+    <div class="cpd-time" id="cpdTimerTime">0:00</div>
+  </div>
+  <div class="toolbar" style="margin-top:9px">
+    <button class="btn primary" type="button" onclick="stopCpdSession(true)">Stop & save draft</button>
+    <button class="btn secondary" type="button" onclick="stopCpdSession(false)">Discard</button>
+  </div>
+  <div class="tiny" style="margin-top:6px">Saving records evidence only. It will not count as CPD until a later confirmation/reflection step.</div>
+</div>
+
+<script>
+const supabaseUrl="https://uttdyjdbaceppefbspsf.supabase.co";
+const supabaseKey="sb_publishable_rqWueVa7IV3N1hZ13cLmCA_WeIizgsd";
+let db=null;
+
+function initDatabase(){
+  if(!window.supabase || typeof window.supabase.createClient!=="function"){
+    const el=document.getElementById("conn");
+    if(el){
+      el.innerHTML='<span class="statusdot"></span>Supabase library failed to load. Refresh the page.';
+      el.className="small err";
+    }
+    return false;
+  }
+  db=window.supabase.createClient(supabaseUrl,supabaseKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  return true;
+}
+
+let profiles=[],cases=[],reviews=[],allowedDomains=[],cpdEvents=[],cpdActivityTypes=[],cpdRules=[],cpdReflections=[],cpdStatements=[],practiceAnalytics=null,selectedId=null,currentUser=null,currentProfile=null,testMode=false;
+
+
+const CPD_RULE_VERSION="HC-CPD-MAP-2026.1";
+const CPD_YEAR=2026;
+const CPD_IDLE_MS=120000;
+let cpdSession=null,cpdTimerHandle=null,cpdLastInteraction=Date.now();
+
+function cpdLocalDate(d=new Date()){
+ const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),day=String(d.getDate()).padStart(2,"0");
+ return `${y}-${m}-${day}`;
+}
+function cpdFormatSeconds(sec){
+ sec=Math.max(0,Math.floor(sec||0));
+ const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),ss=sec%60;
+ return h?`${h}:${String(m).padStart(2,"0")}:${String(ss).padStart(2,"0")}`:`${m}:${String(ss).padStart(2,"0")}`;
+}
+function cpdMarkActivity(){cpdLastInteraction=Date.now()}
+["pointerdown","keydown","touchstart","scroll"].forEach(ev=>window.addEventListener(ev,cpdMarkActivity,{passive:true}));
+
+function cpdContextVisible(){
+ if(!cpdSession)return false;
+ if(document.visibilityState!=="visible"||!document.hasFocus())return false;
+ if(Date.now()-cpdLastInteraction>=CPD_IDLE_MS)return false;
+ const panel=document.getElementById(cpdSession.panel_id||"");
+ if(panel&&!panel.classList.contains("active"))return false;
+ const detail=document.getElementById(cpdSession.detail_id||"");
+ if(detail&&detail.style.display==="none")return false;
+ return true;
+}
+function renderCpdTimer(){
+ const box=document.getElementById("cpdTimer");if(!box)return;
+ if(!cpdSession){box.classList.remove("open");return}
+ box.classList.add("open");
+ document.getElementById("cpdTimerTitle").textContent=cpdSession.title;
+ document.getElementById("cpdTimerTime").textContent=cpdFormatSeconds(cpdSession.active_ms/1000);
+ const active=cpdContextVisible();
+ const st=document.getElementById("cpdTimerState");
+ st.className="tiny "+(active?"cpd-live":"cpd-paused");
+ st.textContent=active?"Active time counting":"Paused — return to the review and interact to resume";
+}
+function cpdTick(){
+ if(!cpdSession)return;
+ const now=performance.now(),delta=Math.max(0,Math.min(5000,now-cpdSession.last_tick));
+ cpdSession.last_tick=now;
+ if(cpdContextVisible())cpdSession.active_ms+=delta;else cpdSession.idle_ms+=delta;
+ renderCpdTimer();
+}
+function startCpdEvidenceReview(caseId,consultantId){
+ if(!db||!currentProfile)return alert("Sign in before recording CPD evidence.");
+ if(testMode)return alert("CPD recording is disabled in Test Trainee Mode.");
+ if(cpdSession)return alert("A CPD timing session is already running. Stop or discard it before starting another.");
+ const c=cases.find(x=>x.id===caseId),r=reviewFor(caseId,consultantId);
+ if(!c||!r?.guideline_analysis)return alert("A completed guideline analysis is required for this CPD evidence review.");
+ const detailId=`archive-${caseId}`;
+ const detail=document.getElementById(detailId);
+ if(detail)detail.style.display="block";
+ cpdLastInteraction=Date.now();
+ cpdSession={
+   activity_type:"evidence_review",case_id:caseId,source_type:"guideline_analysis",
+   source_id:`${caseId}:${consultantId}`,evidence_type:"guideline_analysis",evidence_reference:`${caseId}:${consultantId}`,
+   title:`${caseId} · guideline/evidence review`,description:`Active review of case-specific guideline analysis for ${caseId}.`,
+   started_at:new Date(),active_ms:0,idle_ms:0,last_tick:performance.now(),panel_id:"archive",detail_id:detailId
+ };
+ cpdTimerHandle=setInterval(cpdTick,1000);
+ renderCpdTimer();
+}
+function canStartPeerFeedbackCpd(c,r){
+ if(testMode||!currentProfile||r.review_status!=="reviewed")return false;
+ if(currentProfile.role==="Trainee")return c.trainee_id===currentProfile.id;
+ if(currentProfile.role==="Consultant")return r.consultant_id!==currentProfile.id;
+ return false;
+}
+function startCpdPeerFeedbackReview(caseId,consultantId){
+ if(!db||!currentProfile)return alert("Sign in before recording CPD evidence.");
+ if(testMode)return alert("CPD recording is disabled in Test Trainee Mode.");
+ if(cpdSession)return alert("A CPD timing session is already running. Stop or discard it before starting another.");
+ const c=cases.find(x=>x.id===caseId),r=reviewFor(caseId,consultantId);
+ if(!c||!r||!canStartPeerFeedbackCpd(c,r))return alert("This consultant review is not available to you as a peer-feedback CPD activity.");
+ const detailId=`archive-${caseId}`;
+ const detail=document.getElementById(detailId);if(detail)detail.style.display="block";
+ const reviewer=profileDisplayName(consultantId);
+ cpdLastInteraction=Date.now();
+ cpdSession={
+   activity_type:"peer_feedback_review",case_id:caseId,source_type:"consultant_review",
+   source_id:`${caseId}:${consultantId}`,evidence_type:"consultant_review",evidence_reference:`${caseId}:${consultantId}`,
+   title:`${caseId} · peer feedback from ${reviewer}`,description:`Active review of consultant feedback from ${reviewer} for ${caseId}.`,
+   started_at:new Date(),active_ms:0,idle_ms:0,last_tick:performance.now(),panel_id:"archive",detail_id:detailId
+ };
+ cpdTimerHandle=setInterval(cpdTick,1000);
+ renderCpdTimer();
+}
+function startCpdPracticeReview(){
+ if(!db||!currentProfile)return alert("Sign in before recording CPD evidence.");
+ if(testMode)return alert("CPD recording is disabled in Test Trainee Mode.");
+ if(cpdSession)return alert("A CPD timing session is already running. Stop or discard it before starting another.");
+ if(!practiceAnalytics?.practice_review_available)return alert(`A longitudinal practice review becomes available after at least ${practiceAnalytics?.practice_review_minimum_cases||2} completed cases in the selected CPD year.`);
+ const peerAvailable=!!practiceAnalytics?.peer_benchmark?.available;
+ const type=peerAvailable?"institutional_benchmark":"personal_outcome_review";
+ const label=peerAvailable?"personal vs peer consultant benchmark":"personal practice outcome review";
+ cpdLastInteraction=Date.now();
+ cpdSession={
+   activity_type:type,case_id:null,source_type:"practice_dashboard",source_id:`${practiceAnalytics.year}:${currentProfile.id}`,
+   evidence_type:"practice_analytics",evidence_reference:`practice:${practiceAnalytics.year}:${currentProfile.id}`,
+   title:`${practiceAnalytics.year} · ${label}`,
+   description:peerAvailable?`Active review of personal Haem Consult practice patterns compared with privacy-thresholded peer consultant aggregate data for ${practiceAnalytics.year}.`:`Active review of personal longitudinal Haem Consult practice patterns for ${practiceAnalytics.year}.`,
+   reflection_required:true,started_at:new Date(),active_ms:0,idle_ms:0,last_tick:performance.now(),panel_id:"cpd",detail_id:null
+ };
+ cpdTimerHandle=setInterval(cpdTick,1000);
+ renderCpdTimer();
+}
+
+async function stopCpdSession(save){
+ if(!cpdSession)return;
+ cpdTick();
+ const session=cpdSession;
+ if(cpdTimerHandle){clearInterval(cpdTimerHandle);cpdTimerHandle=null}
+ cpdSession=null;renderCpdTimer();
+ if(!save)return;
+ if(!db||!currentProfile)return alert("The CPD draft could not be saved because the authenticated profile is unavailable.");
+ const activeSeconds=Math.max(0,Math.round(session.active_ms/1000));
+ const idleSeconds=Math.max(0,Math.round(session.idle_ms/1000));
+ if(activeSeconds<1)return alert("No active review time was recorded, so no CPD draft was created.");
+ const ended=new Date();
+ const row={
+   profile_id:currentProfile.id,activity_date:cpdLocalDate(session.started_at),activity_type:session.activity_type,
+   case_id:session.case_id,source_type:session.source_type,source_id:session.source_id,description:session.description,
+   started_at:session.started_at.toISOString(),ended_at:ended.toISOString(),active_seconds:activeSeconds,idle_seconds:idleSeconds,
+   status:"draft",reflection_required:session.reflection_required!==undefined?!!session.reflection_required:!!cpdActivityTypes.find(x=>x.activity_type===session.activity_type)?.default_reflection_required,reflection_completed:false,framework_rule_version:CPD_RULE_VERSION,
+   evidence_type:session.evidence_type,evidence_reference:session.evidence_reference
+ };
+ const {error}=await db.from("haem_cpd_events").insert(row);
+ if(error)return alert("CPD draft was not saved: "+error.message);
+ await loadCpdData();renderCpd();
+ alert(`Draft CPD evidence saved: ${cpdFormatSeconds(activeSeconds)} active review time. Open My CPD to confirm or exclude it.`);
+}
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function v(id){const e=document.getElementById(id);return e?e.value:""}
+function bool(id){return v(id)==="Yes"}
+function emailDomain(email){const a=(email||"").trim().toLowerCase().split("@");return a.length===2?a[1]:""}
+function switchTab(id){
+  document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.toggle("active",x.id===id));
+  renderAll();renderCpdTimer();
+}
+
+function handleReviewDeepLink(){
+ if(!currentProfile||currentProfile.role!=="Consultant")return;
+ const params=new URLSearchParams(window.location.search);
+ if(params.get("tab")!=="review")return;
+ switchTab("review");
+ const caseId=(params.get("case")||"").trim();
+ if(caseId && reviewFor(caseId,currentProfile.id)?.review_status==="pending"){
+   setTimeout(()=>selectReview(caseId),0);
+ }
+}
+
+function showConn(ok,msg){
+  const el=document.getElementById("conn");
+  el.innerHTML=`<span class="statusdot ${ok?"live":""}"></span>${esc(msg)}`;
+  el.className="small "+(ok?"ok":"err");
+}
+
+async function loadDomains(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+  const {data,error}=await db.from("haem_allowed_email_domains").select("domain,organisation").eq("active",true).order("organisation");
+  if(error){showConn(false,error.message);return}
+  allowedDomains=data||[];
+  renderDomainList();
+}
+
+async function refreshAuth(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+  const {data:{session}}=await db.auth.getSession();
+  currentUser=session?.user||null;
+  if(!currentUser){
+    currentProfile=null;profiles=[];cases=[];reviews=[];cpdEvents=[];cpdActivityTypes=[];cpdRules=[];cpdReflections=[];cpdStatements=[];practiceAnalytics=null;
+    renderAuthUI();renderAll();return;
+  }
+  const {data,error}=await db.from("haem_profiles").select("*").eq("auth_user_id",currentUser.id).maybeSingle();
+  currentProfile=error?null:data;
+  await loadProtectedData();
+  renderAuthUI();renderAll();
+  handleReviewDeepLink();
+}
+
+async function loadCpdData(){
+ if(!db||!currentUser||!currentProfile||currentProfile.status!=="Active"){cpdEvents=[];cpdActivityTypes=[];cpdRules=[];cpdReflections=[];cpdStatements=[];practiceAnalytics=null;return}
+ const [e,a,m,rf,st,pa]=await Promise.all([
+   db.from("haem_cpd_events").select("*").order("activity_date",{ascending:false}).order("created_at",{ascending:false}),
+   db.from("haem_cpd_activity_types").select("*").eq("active",true),
+   db.from("haem_cpd_framework_rules").select("*").eq("active",true).eq("rule_version",CPD_RULE_VERSION),
+   db.from("haem_cpd_reflections").select("*"),
+   db.from("haem_cpd_statements").select("*").eq("cpd_year",CPD_YEAR).order("generated_at",{ascending:false}),
+   db.rpc("get_haem_practice_analytics",{p_year:CPD_YEAR})
+ ]);
+ const firstError=e.error||a.error||m.error||rf.error||st.error;
+ if(firstError){console.warn("CPD data unavailable",firstError.message);cpdEvents=[];cpdActivityTypes=[];cpdRules=[];cpdReflections=[];cpdStatements=[];practiceAnalytics=null;return}
+ cpdEvents=e.data||[];cpdActivityTypes=a.data||[];cpdRules=m.data||[];cpdReflections=rf.data||[];cpdStatements=st.data||[];
+ practiceAnalytics=pa.error?null:pa.data;
+ if(pa.error)console.warn("Practice analytics unavailable",pa.error.message);
+}
+
+async function loadProtectedData(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+  if(!currentUser||!currentProfile||currentProfile.status!=="Active"){profiles=[];cases=[];reviews=[];return}
+  const [p,c,r]=await Promise.all([
+    db.from("haem_profiles").select("*").eq("status","Active").order("full_name"),
+    db.from("haem_cases").select("*").order("created_at",{ascending:false}),
+    db.from("haem_case_reviews").select("*").order("assigned_at",{ascending:false})
+  ]);
+  if(p.error||c.error||r.error){showConn(false,(p.error||c.error||r.error).message);return}
+  profiles=p.data||[];cases=c.data||[];reviews=r.data||[];
+  await loadCpdData();
+  showConn(true,"Authenticated live database connected");
+}
+
+function renderAuthUI(){
+  const stat=document.getElementById("authStatus"),out=document.getElementById("signOutBtn"),testBtn=document.getElementById("testModeBtn"),pwd=document.getElementById("passwordCard");
+  if(!currentUser){
+    stat.textContent="Not signed in";out.style.display="none";testBtn.style.display="none";pwd.style.display="none";testMode=false;
+    document.querySelectorAll(".tab").forEach(b=>b.style.display=b.dataset.tab==="apply"?"":"none");
+    if(!document.getElementById("apply").classList.contains("active"))switchTab("apply");
+    return;
+  }
+  out.style.display="";pwd.style.display="block";
+  if(!currentProfile){
+    stat.innerHTML=`Signed in as <b>${esc(currentUser.email)}</b> · awaiting approved profile`;
+    testBtn.style.display="none";
+    document.querySelectorAll(".tab").forEach(b=>b.style.display=b.dataset.tab==="apply"?"":"none");
+    return;
+  }
+
+  const canTest=currentProfile.id==="DPC" && currentProfile.role==="Consultant";
+  testBtn.style.display=canTest?"":"none";
+  testBtn.textContent=testMode?"Return to Consultant Mode":"Enter Test Trainee Mode";
+
+  if(testMode && canTest){
+    stat.innerHTML=`<span class="err"><b>TEST TRAINEE MODE</b></span> · signed in as ${esc(currentProfile.full_name)} (${esc(currentProfile.id)})<br><span class="tiny">Acting as synthetic trainee <b>TESTT1</b>. Dummy/de-identified cases only.</span>`;
+  }else{
+    stat.innerHTML=`Signed in: <b>${esc(currentProfile.full_name)} (${esc(currentProfile.id)})</b> · ${esc(currentProfile.role)}`;
+  }
+
+  document.querySelectorAll(".tab").forEach(b=>{
+    const t=b.dataset.tab;
+    let show=true;
+    if(t==="apply")show=false;
+    if(testMode && canTest){
+      if(t==="review"||t==="cpd")show=false;
+      if(t==="new")show=true;
+    }else{
+      if(currentProfile.role==="Trainee" && t==="review")show=false;
+      if(currentProfile.role==="Consultant" && t==="new")show=false;
+    }
+    b.style.display=show?"":"none";
+  });
+  const active=document.querySelector(".tab.active");
+  if(active && active.style.display==="none"){
+    switchTab(testMode&&canTest?"new":(currentProfile.role==="Trainee"?"new":"review"));
+  }
+}
+
+function renderExperienceOptions(){
+ const role=v("applyRole"),sel=document.getElementById("applyExperience"),lab=document.getElementById("experienceLabel");
+ if(role==="Trainee"){
+   lab.textContent="Year of haematology training";
+   sel.innerHTML=["1","2","3","4","5+"].map(x=>`<option value="${x}">${x}</option>`).join("");
+ }else{
+   lab.textContent="Years as consultant";
+   sel.innerHTML=["0–4","5–9","10–14","15–19","20–24","25+"].map(x=>`<option value="${x}">${x} years</option>`).join("");
+ }
+}
+function renderDomainList(){
+ const el=document.getElementById("domainList");if(!el)return;
+ el.innerHTML=allowedDomains.map(d=>`<div class="result" style="margin-top:6px;padding:9px 11px"><b>${esc(d.organisation)}</b><div class="tiny">@${esc(d.domain)}</div></div>`).join("");
+}
+function checkEmailDomain(){
+ const email=v("applyEmail"),domain=emailDomain(email),el=document.getElementById("domainCheck");
+ if(!domain){el.textContent="";return}
+ const match=allowedDomains.find(d=>d.domain===domain);
+ el.innerHTML=match?`<span class="ok">✓ Accepted domain — ${esc(match.organisation)}</span>`:`<span class="err">✕ @${esc(domain)} is not approved.</span>`;
+}
+function callbackUrl(){
+ if(location.protocol==="http:"||location.protocol==="https:"){
+   const path = location.pathname.endsWith("/") ? location.pathname : location.pathname.replace(/[^/]+$/,"");
+   return location.origin + path;
+ }
+ return null;
+}
+async function applyForLogin(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+ const first=v("applyFirstName").trim(),initials=v("applyInitials").trim().toUpperCase(),email=v("applyEmail").trim().toLowerCase(),role=v("applyRole"),experience=v("applyExperience"),domain=emailDomain(email),out=document.getElementById("applyResult");
+ out.innerHTML="";
+ if(!first)return alert("Enter your first name.");
+ if(!/^[A-Z]{2,6}$/.test(initials))return alert("Initials must be 2–6 letters.");
+ if(!allowedDomains.some(d=>d.domain===domain)){out.innerHTML=`<div class="notice"><b>Not accepted:</b> @${esc(domain)} is not approved.</div>`;return}
+ const {error:appError}=await db.from("haem_login_applications").insert({
+   first_name:first,initials,email,role,experience_band:experience,email_domain:domain,status:"pending_verification"
+ });
+ if(appError){out.innerHTML=`<div class="notice"><b>Application not created:</b> ${esc(appError.message)}</div>`;return}
+ const redirect=callbackUrl();
+ const options={shouldCreateUser:true};
+ if(redirect)options.emailRedirectTo=redirect;
+ const {error}=await db.auth.signInWithOtp({email,options});
+ if(error){out.innerHTML=`<div class="notice"><b>Application saved, but email could not be sent:</b> ${esc(error.message)}</div>`;return}
+ out.innerHTML=`<div class="consultant"><b>Verification email sent.</b><br>Open the message sent to <b>${esc(email)}</b> and use the sign-in link. When you return after verification, choose a password. After that, use your email + password to sign in.</div>`;
+}
+async function passwordLogin(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+ const email=v("loginEmail").trim().toLowerCase(),password=v("loginPassword"),out=document.getElementById("loginResult");
+ if(!email||!password){out.innerHTML='<span class="err">Enter your email and password.</span>';return}
+ const {error}=await db.auth.signInWithPassword({email,password});
+ if(error){out.innerHTML=`<span class="err">${esc(error.message)}</span>`;return}
+ out.innerHTML='<span class="ok">Signed in.</span>';
+ await refreshAuth();
+}
+function toggleTestMode(){
+ if(!(currentProfile?.id==="DPC" && currentProfile?.role==="Consultant"))return;
+ testMode=!testMode;
+ renderAuthUI();
+ renderAll();
+ switchTab(testMode?"new":"review");
+}
+async function forgotPassword(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+ const email=v("loginEmail").trim().toLowerCase(),out=document.getElementById("loginResult");
+ if(!email){out.innerHTML='<span class="err">Enter your email address first.</span>';return}
+ const redirect=callbackUrl();
+ const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:redirect});
+ out.innerHTML=error?`<span class="err">${esc(error.message)}</span>`:'<span class="ok">Password reset email sent.</span>';
+}
+async function setAccountPassword(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+ const p1=v("newPassword"),p2=v("confirmPassword"),out=document.getElementById("passwordResult");
+ if(p1.length<10){out.innerHTML='<span class="err">Use at least 10 characters.</span>';return}
+ if(p1!==p2){out.innerHTML='<span class="err">Passwords do not match.</span>';return}
+ const {error}=await db.auth.updateUser({password:p1});
+ if(error){out.innerHTML=`<span class="err">${esc(error.message)}</span>`;return}
+ out.innerHTML='<span class="ok"><b>Password saved.</b> Use your health-service email and this password for future logins.</span>';
+ document.getElementById("newPassword").value="";document.getElementById("confirmPassword").value="";
+ document.getElementById("passwordTitle").textContent="Change password";
+ document.getElementById("passwordHelp").textContent="Your health-service email is your username. You can change your password here at any time.";
+}
+async function signOut(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+ if(cpdSession)await stopCpdSession(false);
+ await db.auth.signOut();currentUser=null;currentProfile=null;profiles=[];cases=[];reviews=[];cpdEvents=[];cpdActivityTypes=[];cpdRules=[];cpdReflections=[];cpdStatements=[];practiceAnalytics=null;renderAuthUI();switchTab("apply");}
+
+function renderUsers(){
+ const t=document.getElementById("traineeUser"),c=document.getElementById("consultantUser");
+ if(t){
+   if(testMode && currentProfile?.id==="DPC" && currentProfile?.role==="Consultant"){
+     t.innerHTML=`<option value="TESTT1">Test Trainee (TESTT1)</option>`;
+   }else if(currentProfile?.role==="Trainee"){
+     t.innerHTML=`<option value="${currentProfile.id}">${esc(currentProfile.full_name)} (${currentProfile.id})</option>`;
+   }else t.innerHTML="";
+   t.onchange=updateNextId;
+ }
+ if(c){
+   if(currentProfile?.role==="Consultant" && !testMode)c.innerHTML=`<option value="${currentProfile.id}">${esc(currentProfile.full_name)} (${currentProfile.id})</option>`;
+   else c.innerHTML="";
+ }
+}
+async function updateNextId(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+ const el=document.getElementById("nextCaseId");if(!el)return;
+ const traineeId=(testMode && currentProfile?.id==="DPC" && currentProfile?.role==="Consultant")?"TESTT1":(currentProfile?.role==="Trainee"?currentProfile.id:null);
+ if(!traineeId){el.value="";return}
+ const {data,error}=await db.rpc("next_haem_case_id",{p_trainee_id:traineeId});
+ el.value=error?"":data;
+}
+
+
+let privacyApprovedFingerprint=null;
+
+function privacyPayload(){
+ return {
+   problem:v("problem"),
+   age_band:v("age"),
+   setting:v("setting"),
+   clinical_summary:v("summary"),
+   clinical_question:v("question"),
+   trainee_plan:v("trainee"),
+   tags:v("tags").split(",").map(x=>x.trim()).filter(Boolean)
+ };
+}
+function privacyFingerprint(){
+ return JSON.stringify(privacyPayload());
+}
+function privacyFields(){
+ const p=privacyPayload();
+ return {
+   "Problem / diagnosis":p.problem,
+   "Clinical summary":p.clinical_summary,
+   "Clinical question":p.clinical_question,
+   "Trainee proposed management":p.trainee_plan,
+   "Tags":Array.isArray(p.tags)?p.tags.join(", "):p.tags
+ };
+}
+function privacyHit(field,severity,risk_type,fragment,reason,suggestion){
+ return {field,severity,risk_type,text_fragment:fragment,reason,suggested_generalisation:suggestion||"Remove or generalise this detail."};
+}
+function scanDirectIdentifiers(){
+ const findings=[];
+ const patterns=[
+   {severity:"red",type:"Email address",re:/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,reason:"Email addresses can directly identify a patient.",suggestion:"Remove the email address."},
+   {severity:"red",type:"Australian phone number",re:/(?:\+?61[\s.-]?)?(?:0?4\d{2}|0?[2378])[\s.-]?\d{3}[\s.-]?\d{3,4}\b/g,reason:"Phone numbers can directly identify a patient.",suggestion:"Remove the phone number."},
+   {severity:"red",type:"Hospital record identifier",re:/\b(?:UR|URN|UR\s*NO|MRN|medical\s*record|unit\s*record|hospital\s*(?:record|number|no\.?))\s*[:#-]?\s*[A-Z0-9-]{4,20}\b/gi,reason:"This looks like a hospital patient record identifier.",suggestion:"Remove the UR/MRN/hospital record number."},
+   {severity:"red",type:"Accession / episode identifier",re:/\b(?:accession|specimen|episode|admission|referral|booking)\s*(?:number|no\.?|id)?\s*[:#-]?\s*[A-Z0-9-]{4,24}\b/gi,reason:"This looks like a patient episode, specimen or referral identifier.",suggestion:"Remove the identifier."},
+   {severity:"red",type:"Medicare identifier",re:/\bmedicare(?:\s*(?:number|no\.?))?\s*[:#-]?\s*\d[\d\s-]{8,14}\b/gi,reason:"A Medicare number is a direct healthcare identifier.",suggestion:"Remove the Medicare number."},
+   {severity:"red",type:"Individual Healthcare Identifier",re:/\b(?:IHI\s*[:#-]?\s*)?(?:8003[\s-]?60[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4})\b/gi,reason:"This resembles an Individual Healthcare Identifier (IHI).",suggestion:"Remove the IHI."},
+   {severity:"red",type:"DVA identifier",re:/\bDVA(?:\s*(?:number|no\.?))?\s*[:#-]?\s*[A-Z0-9]{5,15}\b/gi,reason:"A DVA number can directly identify a patient.",suggestion:"Remove the DVA number."},
+   {severity:"red",type:"Date of birth",re:/\b(?:DOB|date\s+of\s+birth|born)\s*[:#-]?\s*(?:\d{1,2}[\/.-]\d{1,2}[\/.-](?:19|20)\d{2}|(?:19|20)\d{2}-\d{1,2}-\d{1,2})\b/gi,reason:"Exact date of birth is identifying information.",suggestion:"Use the age band already provided instead."},
+   {severity:"red",type:"Patient name field",re:/\b(?:patient\s+name|name)\s*[:#-]\s*[A-Z][A-Za-z' -]{2,60}\b/g,reason:"This appears to contain a patient's name.",suggestion:"Remove the patient's name."},
+   {severity:"red",type:"Street address",re:/\b\d{1,5}\s+[A-Za-z][A-Za-z' -]{2,40}\s+(?:Street|St|Road|Rd|Avenue|Ave|Drive|Dr|Court|Ct|Lane|Ln|Crescent|Cres|Boulevard|Blvd|Place|Pl|Parade|Pde|Highway|Hwy)\b/gi,reason:"A street address can directly identify a patient.",suggestion:"Remove the address; use a broad location only if clinically essential."},
+   {severity:"amber",type:"Exact calendar date",re:/\b(?:\d{1,2}[\/.-]\d{1,2}[\/.-](?:19|20)\d{2}|(?:19|20)\d{2}-\d{1,2}-\d{1,2})\b/g,reason:"Exact dates can increase re-identification risk when combined with clinical details.",suggestion:"Use relative timing such as '3 days ago' or '2 weeks after surgery' where possible."},
+   {severity:"amber",type:"Ward / bed detail",re:/\b(?:ward|bed)\s*[:#-]?\s*[A-Z0-9-]{1,12}\b/gi,reason:"Ward or bed details can narrow a patient to a specific hospital episode.",suggestion:"Use 'inpatient' unless the exact location is clinically necessary."}
+ ];
+ for(const [field,text0] of Object.entries(privacyFields())){
+   const text=String(text0||"");
+   for(const p of patterns){
+     p.re.lastIndex=0;
+     let m;
+     while((m=p.re.exec(text))!==null){
+       const fragment=m[0].slice(0,100);
+       findings.push(privacyHit(field,p.severity,p.type,fragment,p.reason,p.suggestion));
+       if(findings.length>=20)return findings;
+       if(m.index===p.re.lastIndex)p.re.lastIndex++;
+     }
+   }
+ }
+ return findings;
+}
+function setPrivacyStatus(level,text){
+ const el=document.getElementById("privacyCheckStatus");if(!el)return;
+ el.className="privacy-box "+(level==="green"?"privacy-green":level==="amber"?"privacy-amber":level==="red"?"privacy-red":"");
+ el.innerHTML=`<b>Privacy check:</b> ${esc(text)}`;
+}
+function privacyModal(findings,level,summary){
+ return new Promise(resolve=>{
+   const modal=document.getElementById("privacyModal");
+   const box=document.getElementById("privacyFindings");
+   const cont=document.getElementById("privacyContinueBtn");
+   const edit=document.getElementById("privacyEditBtn");
+   document.getElementById("privacyModalTitle").textContent=level==="red"?"Potential patient identifier detected":"Potential re-identification risk";
+   document.getElementById("privacyModalSummary").textContent=summary||"Review the findings below.";
+   box.innerHTML=(findings||[]).map(f=>`<div class="privacy-finding">
+      <div><b>${esc((f.severity||level).toUpperCase())} · ${esc(f.risk_type||"Privacy risk")}</b> <span class="tiny">${esc(f.field||"")}</span></div>
+      ${f.text_fragment?`<div class="small">Detected: <span class="privacy-fragment">${esc(f.text_fragment)}</span></div>`:""}
+      <div class="small">${esc(f.reason||"")}</div>
+      ${f.suggested_generalisation?`<div class="tiny"><b>Suggested:</b> ${esc(f.suggested_generalisation)}</div>`:""}
+   </div>`).join("")||'<div class="small">No individual finding returned.</div>';
+   cont.style.display=level==="amber"?"inline-block":"none";
+   edit.onclick=()=>{modal.classList.remove("open");resolve(false)};
+   cont.onclick=()=>{modal.classList.remove("open");resolve(true)};
+   modal.classList.add("open");
+ });
+}
+async function runPrivacyGate(){
+ const fp=privacyFingerprint();
+ if(privacyApprovedFingerprint===fp){
+   setPrivacyStatus("green","passed for the current text.");
+   return true;
+ }
+ privacyApprovedFingerprint=null;
+ const local=scanDirectIdentifiers();
+ const red=local.filter(x=>x.severity==="red");
+ if(red.length){
+   setPrivacyStatus("red",`${red.length} possible direct identifier${red.length===1?"":"s"} detected — submission blocked.`);
+   await privacyModal(red,"red","Remove the possible direct identifier(s) before the case can be submitted. These details have not been written to the case database.");
+   return false;
+ }
+ const amberLocal=local.filter(x=>x.severity==="amber");
+ setPrivacyStatus("","running contextual re-identification screen…");
+ let aiFindings=[], aiRisk="green", aiSummary="";
+ try{
+   const {data,error}=await db.functions.invoke("screen-haem-privacy",{body:{submission:privacyPayload()}});
+   if(error)throw error;
+   if(data?.error)throw new Error(data.error);
+   aiFindings=Array.isArray(data?.findings)?data.findings:[];
+   aiRisk=data?.risk_level||"green";
+   aiSummary=data?.summary||"";
+ }catch(e){
+   const fallback=[privacyHit("Whole submission","amber","Contextual AI screen unavailable","",String(e?.message||e),"Manually confirm that no combination of details could reasonably identify the patient.")];
+   const ok=await privacyModal([...amberLocal,...fallback],"amber","The hard-stop identifier screen passed, but the contextual AI privacy screen could not run. You may continue only after manually checking the submission.");
+   if(!ok){setPrivacyStatus("amber","contextual screen unavailable — manual review required.");return false}
+   privacyApprovedFingerprint=fp;
+   setPrivacyStatus("amber","hard-stop identifier scan passed; contextual AI unavailable and manually acknowledged.");
+   return true;
+ }
+ const all=[...amberLocal,...aiFindings];
+ const aiRed=all.filter(x=>x.severity==="red");
+ if(aiRisk==="red"||aiRed.length){
+   setPrivacyStatus("red","contextual privacy screen found a high re-identification risk — submission blocked.");
+   await privacyModal(all.length?all:aiRed,"red",aiSummary||"Edit/generalise the identifying combination before submission.");
+   return false;
+ }
+ if(aiRisk==="amber"||all.length){
+   const ok=await privacyModal(all,"amber",aiSummary||"Review these details and generalise them where practical.");
+   if(!ok){setPrivacyStatus("amber","review required before submission.");return false}
+   privacyApprovedFingerprint=fp;
+   setPrivacyStatus("amber","passed after trainee acknowledgement of potential re-identification risk.");
+   return true;
+ }
+ privacyApprovedFingerprint=fp;
+ setPrivacyStatus("green","no obvious identifiers or contextual re-identification risks detected.");
+ return true;
+}
+
+let selectedSubmitConsultantIds=[];
+
+function activeConsultants(){
+ return (profiles||[]).filter(p=>p.role==="Consultant" && p.status==="Active")
+   .sort((a,b)=>(a.full_name||"").localeCompare(b.full_name||""));
+}
+async function openConsultantSelector(){
+ const traineeId=(testMode && currentProfile?.id==="DPC" && currentProfile?.role==="Consultant")?"TESTT1":(currentProfile?.role==="Trainee"?currentProfile.id:null);
+ if(!traineeId)return alert("A verified trainee login or authorised test mode is required.");
+ if(!v("summary").trim()||!v("question").trim())return alert("Clinical summary and question are required.");
+ if(!await runPrivacyGate())return;
+ const consultants=activeConsultants();
+ if(!consultants.length)return alert("No active consultants are currently registered.");
+ selectedSubmitConsultantIds=[];
+ const choices=document.getElementById("consultantChoices");
+ choices.innerHTML=consultants.map(p=>{
+   const exp=p.consultant_experience_band?`${esc(p.consultant_experience_band)} years as consultant`:"Experience not recorded";
+   return `<label class="consultant-choice"><input type="checkbox" name="submitConsultant" value="${esc(p.id)}" onchange="toggleSubmitConsultant('${esc(p.id)}',this.checked)"><b>${esc(p.full_name)} (${esc(p.id)})</b><div class="tiny" style="margin-left:25px">${exp}</div></label>`;
+ }).join("");
+ updateConsultantSubmitButton();
+ document.getElementById("consultantModal").classList.add("open");
+}
+function toggleSubmitConsultant(id,checked){
+ if(checked){
+   if(!selectedSubmitConsultantIds.includes(id))selectedSubmitConsultantIds.push(id);
+ }else{
+   selectedSubmitConsultantIds=selectedSubmitConsultantIds.filter(x=>x!==id);
+ }
+ updateConsultantSubmitButton();
+}
+function updateConsultantSubmitButton(){
+ const btn=document.getElementById("confirmConsultantSubmit");
+ const n=selectedSubmitConsultantIds.length;
+ btn.disabled=n===0;
+ btn.textContent=n===0?"Select at least one consultant":`Submit to ${n} consultant${n===1?"":"s"}`;
+}
+function closeConsultantSelector(){
+ document.getElementById("consultantModal").classList.remove("open");
+ selectedSubmitConsultantIds=[];
+}
+function modalBackdropClick(e){
+ if(e.target===document.getElementById("consultantModal"))closeConsultantSelector();
+}
+async function confirmConsultantSubmission(){
+ if(!selectedSubmitConsultantIds.length)return;
+ const consultantIds=[...selectedSubmitConsultantIds];
+ closeConsultantSelector();
+ await submitCase(consultantIds);
+}
+
+async function submitCase(consultantIds){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+ if(privacyApprovedFingerprint!==privacyFingerprint()){
+   alert("The case text changed after the privacy check. The privacy screen must run again.");
+   await openConsultantSelector();
+   return;
+ }
+
+ const traineeId=(testMode && currentProfile?.id==="DPC" && currentProfile?.role==="Consultant")?"TESTT1":(currentProfile?.role==="Trainee"?currentProfile.id:null);
+ if(!traineeId)return alert("A verified trainee login or authorised test mode is required.");
+ if(!v("summary").trim()||!v("question").trim())return alert("Clinical summary and question are required.");
+ if(!Array.isArray(consultantIds)||!consultantIds.length)return alert("Select at least one consultant.");
+ const args={
+ p_trainee_id:traineeId,p_problem:v("problem"),p_age_band:v("age"),p_setting:v("setting"),p_platelets:+v("plt")||null,p_egfr:+v("egfr")||null,
+ p_active_cancer:bool("cancer"),p_active_bleeding:bool("bleeding"),p_previous_vte:bool("prevVTE"),p_current_anticoagulant:v("anticoag"),
+ p_clinical_summary:v("summary"),p_clinical_question:v("question"),p_trainee_plan:v("trainee"),p_trainee_confidence:+v("confidence"),
+ p_tags:v("tags").split(",").map(x=>x.trim()).filter(Boolean),p_consultant_ids:consultantIds
+ };
+ const {data,error}=await db.rpc("create_haem_case_multi",args);
+ if(error)return alert(error.message);
+
+ privacyApprovedFingerprint=null;
+ setPrivacyStatus("","will run before the next submission.");
+
+ let notificationText="";
+ const {data:notifyData,error:notifyError}=await db.functions.invoke("notify-haem-consultants",{body:{case_id:data.id}});
+ if(notifyError){
+   notificationText=" Case saved, but consultant email notification returned an error: "+(notifyError.message||notifyError);
+ }else if(notifyData?.configured===false){
+   notificationText=" Case saved. Consultant email notifications are not yet configured on the server.";
+ }else if(notifyData?.failed_count){
+   notificationText=` Case saved; ${notifyData.sent_count||0} email notification(s) sent and ${notifyData.failed_count} failed.`;
+ }else{
+   notificationText=` Email notification${consultantIds.length===1?"":"s"} sent to the assigned consultant${consultantIds.length===1?"":"s"}.`;
+ }
+
+ await loadProtectedData();renderAll();
+ const names=consultantIds.map(id=>{const cp=profiles.find(p=>p.id===id);return cp?cp.full_name+" ("+cp.id+")":id}).join(", ");
+ alert(`Submitted ${data.id} to ${names}.${notificationText}${testMode?" Return to Consultant Mode to review it.":""}`);
+}
+
+async function findSimilar(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+
+ if(!currentProfile?.status==="Active")return;
+ const {data,error}=await db.rpc("find_similar_haem_cases",{
+ p_problem:v("problem"),p_platelets:+v("plt")||0,p_egfr:+v("egfr")||0,p_active_cancer:bool("cancer"),p_active_bleeding:bool("bleeding"),
+ p_previous_vte:bool("prevVTE"),p_text:[v("summary"),v("question"),v("tags")].join(" "),p_limit:6
+ });
+ const el=document.getElementById("similar");if(!el)return;
+ if(error){el.innerHTML=`<p class="err">${esc(error.message)}</p>`;return}
+ const grouped=new Map();
+ (data||[]).forEach(r=>{
+   if(!grouped.has(r.id))grouped.set(r.id,{...r,consultant_reviews:[]});
+   grouped.get(r.id).consultant_reviews.push({consultant_id:r.consultant_id,management:r.consultant_management,reasoning:r.consultant_reasoning});
+ });
+ el.innerHTML=[...grouped.values()].map(r=>`<div class="result"><div style="display:flex;justify-content:space-between"><b>${r.id} · ${esc(r.problem)}</b><span class="score">${r.score}%</span></div><div class="tiny">Trainee ${r.trainee_id} · ${r.consultant_reviews.length} completed consultant review${r.consultant_reviews.length===1?"":"s"}</div><div class="small">${esc(r.clinical_summary)}</div>${r.consultant_reviews.map(cr=>`<div class="consultant"><b>${esc(profileDisplayName(cr.consultant_id))}:</b> ${esc(cr.management||"")}<br><span class="tiny">${esc(cr.reasoning||"")}</span></div>`).join("")}</div>`).join("")||'<div class="small">No reviewed cases found.</div>';
+}
+function profileDisplayName(id){
+ const p=(profiles||[]).find(x=>x.id===id);
+ return p?`${p.full_name} (${p.id})`:id;
+}
+function reviewFor(caseId,consultantId){
+ return (reviews||[]).find(r=>r.case_id===caseId && r.consultant_id===consultantId);
+}
+function caseReviews(caseId){
+ return (reviews||[]).filter(r=>r.case_id===caseId);
+}
+function notificationNeedsRetry(r){
+ const status=String(r?.email_notification_status||"pending");
+ return ["pending","error","not_configured"].includes(status);
+}
+function canRetryCaseNotification(c){
+ if(!currentProfile||!c)return false;
+ if(currentProfile.role==="Trainee" && c.trainee_id===currentProfile.id)return true;
+ // DPC is explicitly authorised to submit/test as TESTT1 in this test build.
+ if(currentProfile.id==="DPC" && currentProfile.role==="Consultant" && c.trainee_id==="TESTT1")return true;
+ return false;
+}
+function notificationStatusText(rs){
+ const total=rs.length;
+ const sent=rs.filter(r=>r.email_notification_status==="sent").length;
+ const failed=rs.filter(r=>r.email_notification_status==="error").length;
+ const pending=rs.filter(r=>notificationNeedsRetry(r)).length;
+ if(!total)return "No email assignments";
+ if(sent===total)return `Email notifications sent ${sent}/${total}`;
+ const parts=[`Email notifications sent ${sent}/${total}`];
+ if(pending)parts.push(`${pending} awaiting retry`);
+ if(failed)parts.push(`${failed} failed`);
+ return parts.join(" · " );
+}
+async function retryCaseNotification(caseId,button){
+ if(!db)return alert("Database connection is not ready. Refresh the page and check the connection status.");
+ const c=cases.find(x=>x.id===caseId);
+ if(!c||!canRetryCaseNotification(c))return alert("Only the submitting trainee can retry consultant notifications for this case.");
+ const outstanding=caseReviews(caseId).filter(notificationNeedsRetry);
+ if(!outstanding.length)return alert("There are no outstanding consultant notifications for this case.");
+ const oldText=button?.textContent||"Retry notification";
+ if(button){button.disabled=true;button.textContent="Retrying…";}
+ try{
+   const {data,error}=await db.functions.invoke("notify-haem-consultants",{body:{case_id:caseId}});
+   if(error)throw error;
+   await loadProtectedData();
+   renderAll();
+   if(data?.configured===false){
+     alert("Case remains saved, but consultant email notifications are not configured on the server.");
+   }else if(data?.failed_count){
+     alert(`Notification retry completed for ${caseId}: ${data.sent_count||0} sent and ${data.failed_count} failed.`);
+   }else if(data?.already_sent){
+     alert("All consultant notifications for this case were already marked as sent.");
+   }else{
+     const n=data?.sent_count ?? outstanding.length;
+     alert(`Notification retry successful for ${caseId}: ${n} email notification${n===1?"":"s"} sent.`);
+   }
+ }catch(e){
+   alert("Consultant email notification retry failed: "+(e?.message||e));
+ }finally{
+   if(button&&document.body.contains(button)){button.disabled=false;button.textContent=oldText;}
+ }
+}
+function renderQueue(){
+ const el=document.getElementById("queue");if(!el)return;
+ if(currentProfile?.role!=="Consultant"){el.innerHTML='<div class="small">Consultant login required.</div>';return}
+ const pending=(reviews||[]).filter(r=>r.consultant_id===currentProfile.id && r.review_status==="pending")
+   .map(r=>({r,c:cases.find(c=>c.id===r.case_id)})).filter(x=>x.c);
+ el.innerHTML=pending.map(({r,c})=>`<button class="result" style="width:100%;text-align:left;cursor:pointer" onclick="selectReview('${c.id}')"><b>${c.id} · ${esc(c.problem)}</b><div class="small"><b>Trainee:</b> ${esc(profileDisplayName(c.trainee_id))}</div><div class="small">${esc(c.clinical_question)}</div><div class="tiny">Assigned to ${esc(currentProfile.full_name)} (${esc(currentProfile.id)})</div></button>`).join("")||'<div class="small">No cases currently assigned to you.</div>';
+}
+function selectReview(id){
+ if(currentProfile?.role!=="Consultant")return;
+ const assignment=reviewFor(id,currentProfile.id);
+ if(!assignment||assignment.review_status!=="pending")return;
+ selectedId=id;const c=cases.find(x=>x.id===id);if(!c)return;
+ document.getElementById("reviewTitle").textContent=c.id+" · "+c.problem;
+ document.getElementById("reviewCase").innerHTML=`<div><b>Trainee:</b> ${esc(profileDisplayName(c.trainee_id))}</div><p>${esc(c.clinical_summary)}</p><div><b>Question:</b> ${esc(c.clinical_question)}</div><div class="consultant"><b>Trainee plan:</b> ${esc(c.trainee_plan||"—")}</div>`;
+ document.getElementById("reviewForm").style.display="block";
+}
+async function saveReview(){
+ if(!db){alert("Database connection is not ready. Refresh the page and check the connection status.");return}
+ if(currentProfile?.role!=="Consultant")return alert("Consultant login required.");
+ if(!selectedId||!v("management").trim())return alert("Select a case and enter consultant management.");
+ const assignment=reviewFor(selectedId,currentProfile.id);
+ if(!assignment||assignment.review_status!=="pending")return alert("This case is not currently assigned to your consultant review queue.");
+ const caseId=selectedId;
+ const {error}=await db.from("haem_case_reviews").update({
+ review_status:"reviewed",decision:v("decision"),consultant_management:v("management"),consultant_reasoning:v("reasoning"),change_decision:v("changeDecision"),reviewed_at:new Date().toISOString(),
+ guideline_analysis_status:"not_run",guideline_analysis_error:null
+ }).eq("case_id",caseId).eq("consultant_id",currentProfile.id);
+ if(error)return alert(error.message);
+
+ selectedId=null;
+ document.getElementById("reviewForm").style.display="none";
+ await loadProtectedData();
+ renderAll();
+ alert("Your review was saved. Server-side guideline analysis will now run.");
+ runGuidelineAnalysis(caseId,true).then(ok=>{
+   if(!ok) alert("Your review was saved, but guideline analysis could not complete. Open the case archive to see the error or retry it.");
+ });
+}
+
+function safeHttpUrl(u){
+ try{const x=new URL(u);return (x.protocol==="http:"||x.protocol==="https:")?x.href:"#"}catch(e){return "#"}
+}
+function guidelineHtml(c){
+ const g=c.guideline_analysis;
+ if(!g)return '<div class="small">No guideline concordance analysis recorded.</div>';
+ const sourceRows=(g.sources||[]).map(s=>`<div class="gsource">
+   <div><b>${esc(s.name)}</b> <span class="gtag">source weight ${Math.round((s.weight||0)*100)}%</span></div>
+   <div class="small">${esc(s.note||"")}</div>
+   <div class="small">Trainee vs this source: <b>${s.trainee_score==null?"Not scoreable":s.trainee_score+"%"}</b> · Consultant vs this source: <b>${s.consultant_score==null?"Not scoreable":s.consultant_score+"%"}</b></div>
+   <div class="tiny"><a href="${safeHttpUrl(s.url)}" target="_blank" rel="noopener noreferrer">Open source</a></div>
+ </div>`).join("");
+ const props=(g.propositions||[]).map(x=>`<div class="gprop">
+   <div><b>${esc(x.decision)}</b></div>
+   <div>Weight ${esc(x.weight)}%</div>
+   <div>Trainee: <span class="gtag">${esc(x.trainee||"—")}</span></div>
+   <div>Consultant: <span class="gtag">${esc(x.consultant||"—")}</span></div>
+ </div>`).join("");
+ return `<div class="guideline-grid">
+   <div class="gmetric"><div class="tiny">Trainee ↔ guideline</div><div class="gv">${esc(g.trainee_score)}%</div></div>
+   <div class="gmetric"><div class="tiny">Consultant ↔ guideline</div><div class="gv">${esc(g.consultant_score)}%</div></div>
+   <div class="gmetric"><div class="tiny">Guideline agreement</div><div class="gv">${esc(g.guideline_agreement)}%</div></div>
+   <div class="gmetric"><div class="tiny">Guideline coverage</div><div class="gv">${esc(g.coverage)}%</div></div>
+ </div>
+ <div class="small"><b>Why these sources?</b> ${esc(g.selection_note||"")}</div>
+ <details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700">How this was calculated</summary>
+   <div class="small" style="margin:8px 0">Prototype method: each applicable source is scored separately; sources that are silent are excluded from numerical concordance. The aggregate uses the displayed source weights. Guideline agreement reflects how consistently applicable sources point in the same direction. Coverage estimates how much of the actual case decision is addressed by the selected guidance.</div>
+   <h3 style="margin-top:12px">Source-specific concordance</h3>${sourceRows}
+   <h3 style="margin-top:12px">Management propositions</h3>${props}
+ </details>`;
+}
+
+function guidelineStatusLabel(c){
+ const s=c.guideline_analysis_status || (c.guideline_analysis ? "complete" : "not_run");
+ if(s==="running") return '<span class="analysis-status running">Analysing…</span>';
+ if(s==="complete") return '<span class="analysis-status complete">Guideline analysis complete</span>';
+ if(s==="error") return '<span class="analysis-status error">Analysis error</span>';
+ return '<span class="analysis-status">Not analysed</span>';
+}
+
+async function runGuidelineAnalysis(caseId, quiet=false){
+ if(!db){if(!quiet)alert("Database connection is not ready.");return false}
+ const r=reviewFor(caseId,currentProfile?.id);
+ if(currentProfile?.role!=="Consultant" || !r || r.review_status!=="reviewed"){
+   if(!quiet)alert("Only a consultant who has completed their own review can run guideline analysis for that review.");
+   return false;
+ }
+ r.guideline_analysis_status="running";
+ r.guideline_analysis_error=null;
+ renderArchive();
+
+ const {data,error}=await db.functions.invoke("analyse-haem-guidelines",{body:{case_id:caseId}});
+ if(error){
+   r.guideline_analysis_status="error";
+   r.guideline_analysis_error=error.message||String(error);
+   renderArchive();
+   if(!quiet)alert("Guideline analysis failed: "+(error.message||error));
+   return false;
+ }
+ if(data?.error){
+   r.guideline_analysis_status="error";
+   r.guideline_analysis_error=data.error;
+   renderArchive();
+   if(!quiet)alert("Guideline analysis failed: "+data.error);
+   return false;
+ }
+
+ await loadProtectedData();
+ renderAll();
+ if(!quiet)alert("Guideline analysis complete for your review of "+caseId+".");
+ return true;
+}
+function toggleArchiveCase(id){
+ const el=document.getElementById(id);if(!el)return;
+ el.style.display=el.style.display==="none"?"block":"none";
+}
+function renderArchive(){
+ const el=document.getElementById("archiveTable");if(!el)return;
+ if(!currentProfile){el.innerHTML='<div class="small">Sign in to view the archive.</div>';return}
+ const q=(document.getElementById("archiveSearch").value||"").toLowerCase();
+ const rows=cases.filter(c=>{
+   if(!q)return true;
+   return JSON.stringify({case:c,reviews:caseReviews(c.id)}).toLowerCase().includes(q);
+ });
+ el.innerHTML=rows.map(c=>{
+   const tn=profileDisplayName(c.trainee_id);
+   const rs=caseReviews(c.id);
+   const completed=rs.filter(r=>r.review_status==="reviewed");
+   const detailId=`archive-${c.id}`;
+   const reviewers=completed.length?completed.map(r=>profileDisplayName(r.consultant_id)).join(", "):"No completed consultant review";
+   const outstandingNotifications=rs.filter(notificationNeedsRetry);
+   const retryButton=(canRetryCaseNotification(c)&&outstandingNotifications.length)
+     ?`<button class="btn secondary archive-open" type="button" onclick="event.stopPropagation();retryCaseNotification('${c.id}',this)">Retry notification${outstandingNotifications.length===1?"":"s"}</button>`
+     :"";
+   const reviewCards=rs.map(r=>{
+     const cn=profileDisplayName(r.consultant_id);
+     const canAnalyse=currentProfile?.role==="Consultant" && r.consultant_id===currentProfile.id && r.review_status==="reviewed";
+     const analysisButton=canAnalyse?`<button class="btn secondary archive-open" type="button" onclick="event.stopPropagation();runGuidelineAnalysis('${c.id}')">${r.guideline_analysis?"Re-run guideline analysis":"Run guideline analysis"}</button>`:"";
+     const cpdButton=(!testMode&&r.guideline_analysis)?`<button class="btn secondary archive-open" type="button" onclick="event.stopPropagation();startCpdEvidenceReview('${c.id}','${r.consultant_id}')">Start CPD evidence review</button>`:"";
+     const peerCpdButton=canStartPeerFeedbackCpd(c,r)?`<button class="btn secondary archive-open" type="button" onclick="event.stopPropagation();startCpdPeerFeedbackReview('${c.id}','${r.consultant_id}')">Start CPD peer-feedback review</button>`:"";
+     const err=(r.guideline_analysis_status==="error"&&r.guideline_analysis_error)?`<div class="err tiny" style="margin-top:6px">${esc(r.guideline_analysis_error)}</div>`:"";
+     if(r.review_status!=="reviewed"){
+       return `<div class="consultant"><b>${esc(cn)}</b> <span class="analysis-status">Awaiting review</span><div class="tiny">Assigned ${esc(r.assigned_at||"")}</div></div>`;
+     }
+     return `<div class="consultant" style="margin-top:10px">
+       <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+         <div><b>${esc(cn)}</b> · ${esc(r.decision||"Reviewed")}</div>
+         <div class="toolbar" style="margin-top:0">${analysisButton}${cpdButton}${peerCpdButton}</div>
+       </div>
+       <div style="margin-top:6px"><b>Management:</b> ${esc(r.consultant_management||"—")}</div>
+       <div class="tiny" style="margin-top:5px"><b>Reasoning:</b> ${esc(r.consultant_reasoning||"—")}</div>
+       ${r.change_decision?`<div class="tiny" style="margin-top:5px"><b>What would change this decision:</b> ${esc(r.change_decision)}</div>`:""}
+       <div style="margin-top:8px">${guidelineStatusLabel(r)}</div>
+       ${r.guideline_analysis?`<div class="tiny" style="margin-top:4px"><b>Trainee ↔ guideline ${esc(r.guideline_analysis.trainee_score)}%</b> · <b>${esc(r.consultant_id)} ↔ guideline ${esc(r.guideline_analysis.consultant_score)}%</b> · agreement ${esc(r.guideline_analysis.guideline_agreement)}% · coverage ${esc(r.guideline_analysis.coverage)}%</div>`:""}
+       ${err}
+       <div style="margin-top:10px"><div class="k">Guideline concordance for this consultant review</div>${guidelineHtml(r)}</div>
+     </div>`;
+   }).join("");
+   return `<div class="result">
+     <div class="archive-head" onclick="toggleArchiveCase('${detailId}')">
+       <div>
+         <b>${esc(c.id)} · ${esc(c.problem)}</b>
+         <div class="tiny">Trainee: ${esc(tn)} · ${completed.length}/${rs.length} consultant review${rs.length===1?"":"s"} complete · ${esc(c.status)}</div>
+         <div class="tiny" style="margin-top:4px">Completed reviewers: ${esc(reviewers)}</div>
+         <div class="tiny" style="margin-top:4px">${esc(notificationStatusText(rs))}</div>
+       </div>
+       <div class="toolbar" style="margin-top:0">
+         ${retryButton}
+         <button class="btn secondary archive-open" type="button" onclick="event.stopPropagation();toggleArchiveCase('${detailId}')">Open case</button>
+       </div>
+     </div>
+     <div id="${detailId}" style="display:none;margin-top:10px">
+       <div><b>Clinical summary</b><div class="small">${esc(c.clinical_summary||"—")}</div></div>
+       <div style="margin-top:8px"><b>Question</b><div class="small">${esc(c.clinical_question||"—")}</div></div>
+       <div class="consultant"><b>Trainee plan:</b> ${esc(c.trainee_plan||"—")}</div>
+       <div style="margin-top:12px"><div class="k">Consultant reviews</div>${reviewCards||'<div class="small">No consultant assignments recorded.</div>'}</div>
+     </div>
+   </div>`;
+ }).join("")||'<div class="small">No cases found.</div>';
+}
+function renderProfiles(){
+ const el=document.getElementById("profileTable");if(!el)return;
+ if(!currentProfile){el.innerHTML='<div class="small">Sign in to view profiles.</div>';return}
+ el.innerHTML=`<table><thead><tr><th>ID</th><th>First name</th><th>Role</th><th>Experience</th></tr></thead><tbody>${profiles.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.full_name)}</td><td>${esc(p.role)}</td><td>${esc(p.role==="Trainee"?(p.training_year?("Year "+p.training_year):"—"):(p.consultant_experience_band||"—"))}</td></tr>`).join("")}</tbody></table>`;
+}
+function cpdActivityLabel(type){
+ const a=cpdActivityTypes.find(x=>x.activity_type===type);
+ return a?.label||type;
+}
+function cpdReflectionFor(eventId){return cpdReflections.find(x=>x.event_id===eventId)||null}
+function cpdMappingsFor(e){return cpdRules.filter(r=>r.activity_type===e.activity_type&&r.rule_version===e.framework_rule_version)}
+function cpdMappingHtml(e){
+ const rs=cpdMappingsFor(e);
+ if(!rs.length)return '<span class="tiny">Framework mapping unavailable</span>';
+ return rs.map(r=>`<span class="badge ${r.framework==="RACP"?"b":"g"}">${esc(r.framework)} ${esc(r.category_code)} · ${esc(r.category_label)}</span>`).join("");
+}
+function cpdHours(seconds){return ((Number(seconds)||0)/3600).toFixed(2)}
+function cpdSelectedYear(){return Number(v("cpdYearSelect")||CPD_YEAR)||CPD_YEAR}
+function cpdYearConfirmed(){const y=cpdSelectedYear();return cpdEvents.filter(e=>e.status==="confirmed"&&String(e.activity_date||"").startsWith(`${y}-`))}
+function cpdMappedSeconds(e,r){
+ const sec=Math.max(0,Number(e.active_seconds)||0),max=r?.max_hours_per_event;
+ if(max===null||max===undefined||max==="")return sec;
+ const cap=Number(max)*3600;return Number.isFinite(cap)?Math.min(sec,cap):sec;
+}
+function cpdFrameworkTotals(framework){
+ const totals={};
+ cpdYearConfirmed().forEach(e=>{
+   const r=cpdMappingsFor(e).find(x=>x.framework===framework);if(!r)return;
+   const key=framework==="RCPA"?String(r.category_code||"").charAt(0):String(r.category_code||"");
+   totals[key]=(totals[key]||0)+cpdMappedSeconds(e,r)/3600;
+ });
+ return totals;
+}
+function progressRow(label,value,target){
+ const pct=target?Math.min(100,(value/target)*100):0;
+ return `<div class="progress-row"><div>${esc(label)}</div><div class="progress-track"><div class="progress-fill" style="width:${pct.toFixed(1)}%"></div></div><div class="progress-value">${value.toFixed(2)} / ${target} h</div></div>`;
+}
+function renderCpdProgress(){
+ const racp=document.getElementById("racpProgress"),rcpa=document.getElementById("rcpaProgress");if(!racp||!rcpa)return;
+ if(!currentProfile||testMode){racp.innerHTML='<div class="small">CPD progress unavailable.</div>';rcpa.innerHTML='<div class="small">CPD progress unavailable.</div>';return}
+ const r=cpdFrameworkTotals("RACP"),p=cpdFrameworkTotals("RCPA");
+ const r1=r["1"]||0,r2=r["2"]||0,r3=r["3"]||0,ra=r1+r2+r3;
+ const a=p.A||0,b=p.B||0,c=p.C||0,pa=a+b+c;
+ racp.innerHTML=progressRow("Category 1",r1,12.5)+progressRow("Category 2 minimum",r2,5)+progressRow("Category 3 minimum",r3,5)+progressRow("Categories 2 + 3",r2+r3,25)+progressRow("Total annual context",ra,50);
+ rcpa.innerHTML=progressRow("Category A",a,12.5)+progressRow("Category B minimum",b,5)+progressRow("Category C minimum",c,5)+progressRow("Categories B + C",b+c,25)+progressRow("Total annual context",pa,50);
+}
+function pctPart(n,total){return total?`${Math.round((Number(n||0)/total)*100)}%`:"—"}
+function metricValue(v,suffix=""){return v===null||v===undefined||v===""?"—":`${v}${suffix}`}
+function cpdAnnualState(){
+ const y=cpdSelectedYear(),yearEvents=cpdEvents.filter(e=>String(e.activity_date||"").startsWith(`${y}-`));
+ const confirmed=yearEvents.filter(e=>e.status==="confirmed"),drafts=yearEvents.filter(e=>e.status==="draft");
+ const pdp=confirmed.find(e=>e.activity_type==="pdp_review"),conversation=confirmed.find(e=>e.activity_type==="annual_structured_conversation");
+ const pdpDraft=drafts.find(e=>e.activity_type==="pdp_review"&&e.source_type==="manual_annual"),conversationDraft=drafts.find(e=>e.activity_type==="annual_structured_conversation"&&e.source_type==="manual_annual");
+ return {year:y,confirmed,drafts,pdp,conversation,pdpDraft,conversationDraft,
+   cultural:confirmed.filter(e=>e.cultural_safety).length,inequity:confirmed.filter(e=>e.health_inequity).length,
+   professionalism:confirmed.filter(e=>e.professionalism).length,ethics:confirmed.filter(e=>e.ethics).length};
+}
+function requirementItem(label,done,detail){return `<div class="requirement-item ${done?"okay":"pending"}"><b>${done?"Recorded":"Not yet recorded"}</b><div>${esc(label)}</div>${detail?`<div class="tiny" style="margin-top:3px">${esc(detail)}</div>`:""}</div>`}
+function renderYearEndReporting(){
+ const el=document.getElementById("cpdYearEndReporting");if(!el)return;
+ if(!currentProfile){el.innerHTML='<div class="small">Sign in to view year-end CPD reporting.</div>';return}
+ if(testMode){el.innerHTML='<div class="small">Year-end CPD statements are unavailable in Test Trainee Mode.</div>';return}
+ const st=cpdAnnualState(),combinedCulture=st.cultural+st.inequity,combinedEthics=st.ethics+st.professionalism;
+ const pdpAction=st.pdp?'<button class="btn secondary" type="button" disabled>PDP / self-review recorded</button>':st.pdpDraft?'<button class="btn secondary" type="button" disabled>PDP draft awaiting confirmation</button>':'<button class="btn secondary" type="button" onclick="openAnnualCpdModal(\'pdp_review\')">Record annual PDP / self-review</button>';
+ const convAction=st.conversation?'<button class="btn secondary" type="button" disabled>Annual conversation recorded</button>':st.conversationDraft?'<button class="btn secondary" type="button" disabled>Conversation draft awaiting confirmation</button>':'<button class="btn secondary" type="button" onclick="openAnnualCpdModal(\'annual_structured_conversation\')">Record annual structured conversation</button>';
+ const latest=cpdStatements.filter(x=>Number(x.cpd_year)===st.year).slice(0,5);
+ const statementHtml=latest.length?latest.map(x=>`<div class="statement-item"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><b>${esc(x.statement_id)}</b><div class="tiny">Generated ${esc(new Date(x.generated_at).toLocaleString())} · ${cpdHours(x.unique_active_seconds)} unique active hours</div></div><div class="toolbar" style="margin-top:0"><button class="btn secondary" type="button" onclick="downloadCpdStatementPdfById('${x.id}')">PDF</button><button class="btn secondary" type="button" onclick="downloadCpdAuditCsvById('${x.id}')">Audit CSV</button></div></div><div class="statement-hash" style="margin-top:6px">SHA-256 ${esc(x.evidence_hash)}</div></div>`).join(""):'<div class="small">No frozen year-end statement has been generated yet.</div>';
+ el.innerHTML=`<div class="yearend-grid"><div><div class="k">Annual requirements recorded in Haem Consult</div><div class="requirement-list">
+ ${requirementItem("PDP / annual self-review",!!st.pdp,st.pdpDraft?"Draft exists but is not counted until confirmed.":"")}
+ ${requirementItem("Annual structured conversation",!!st.conversation,st.conversationDraft?"Draft exists but is not counted until confirmed.":"")}
+ ${requirementItem("RACP cultural safety / health inequity activities",combinedCulture>=2,`${combinedCulture} flagged activities; RACP context target 2`)}
+ ${requirementItem("RACP ethics / professional behaviour activities",combinedEthics>=2,`${combinedEthics} flagged activities; RACP context target 2`)}
+ ${requirementItem("RCPA CAPE - Cultural safety",st.cultural>=1,`${st.cultural} flagged activities`)}
+ ${requirementItem("RCPA CAPE - Health inequity",st.inequity>=1,`${st.inequity} flagged activities`)}
+ ${requirementItem("RCPA CAPE - Professionalism",st.professionalism>=1,`${st.professionalism} flagged activities`)}
+ ${requirementItem("RCPA CAPE - Ethics",st.ethics>=1,`${st.ethics} flagged activities`)}
+ </div><div class="toolbar">${pdpAction}${convAction}</div></div>
+ <div><div class="k">Final statement</div><div class="small">Confirmed activities: <b>${st.confirmed.length}</b> · Unresolved drafts: <b>${st.drafts.length}</b>. Drafts are not included in the final statement.</div>${st.drafts.length?'<div class="practice-withheld"><b>Unresolved drafts</b><div class="tiny">Review or exclude drafts before year-end where possible. You may still generate a snapshot; omitted drafts are recorded in its summary.</div></div>':''}<div class="toolbar"><button class="btn primary" type="button" onclick="openCpdStatementModal()" ${st.confirmed.length?'':'disabled'}>Generate final ${st.year} statement</button></div><div class="tiny">Generating a statement does not lock the live ledger. It creates an immutable snapshot you can reproduce later.</div></div></div>
+ <div style="margin-top:14px"><div class="k">Frozen statements</div>${statementHtml}</div>`;
+}
+function openAnnualCpdModal(type){
+ if(testMode||!currentProfile)return;
+ const typeEl=document.getElementById("annualCpdType");typeEl.value=type;
+ document.getElementById("annualCpdDate").value=cpdLocalDate();
+ document.getElementById("annualCpdMinutes").value=type==="pdp_review"?60:45;
+ updateAnnualCpdHelp();document.getElementById("annualCpdModal").classList.add("open");
+}
+function closeAnnualCpdModal(){document.getElementById("annualCpdModal").classList.remove("open")}
+function updateAnnualCpdHelp(){
+ const type=v("annualCpdType"),help=document.getElementById("annualCpdHelp");
+ if(!help)return;
+ help.textContent=type==="pdp_review"?"Enter the actual time spent on annual self-review / PDP work. Haem Consult's combined RCPA B1 mapping is capped at 5 hours for this annual entry.":"Enter the actual duration of the structured annual conversation. The RCPA B2 mapping is capped at 3 hours for this annual entry.";
+}
+async function saveAnnualCpdDraft(){
+ if(!db||!currentProfile||testMode)return;
+ const type=v("annualCpdType"),date=v("annualCpdDate"),minutes=Number(v("annualCpdMinutes"));
+ if(!["pdp_review","annual_structured_conversation"].includes(type))return alert("Select a valid annual CPD activity.");
+ if(!/^2026-\d{2}-\d{2}$/.test(date))return alert("Please choose a date within the 2026 CPD year.");
+ const max=type==="pdp_review"?300:180;if(!Number.isFinite(minutes)||minutes<1||minutes>max)return alert(`Enter an actual duration between 1 and ${max} minutes.`);
+ const label=type==="pdp_review"?"Annual self-review / PDP":"Annual structured conversation";
+ const row={profile_id:currentProfile.id,activity_date:date,activity_type:type,case_id:null,source_type:"manual_annual",source_id:`2026:${type}`,description:label,started_at:null,ended_at:null,active_seconds:Math.round(minutes*60),idle_seconds:0,status:"draft",reflection_completed:false,framework_rule_version:CPD_RULE_VERSION,evidence_type:"participant_reported_duration",evidence_reference:`annual:2026:${type}`};
+ const {data,error}=await db.from("haem_cpd_events").insert(row).select("id").single();
+ if(error)return alert("Annual CPD draft was not saved: "+error.message);
+ closeAnnualCpdModal();await loadCpdData();renderCpd();
+ if(data?.id)openCpdConfirm(data.id);
+}
+function openCpdStatementModal(){
+ const st=cpdAnnualState();if(!st.confirmed.length)return alert("Confirm at least one CPD activity before generating a statement.");
+ const actual=st.confirmed.reduce((a,e)=>a+(Number(e.active_seconds)||0),0);
+ document.getElementById("cpdStatementSummary").innerHTML=`<b>${esc(st.year)} year-end snapshot</b><div style="margin-top:6px">${st.confirmed.length} confirmed activities · ${cpdHours(actual)} h unique active time · ${st.drafts.length} unresolved drafts excluded from the snapshot.</div>`;
+ document.getElementById("cpdStatementAttest").checked=false;document.getElementById("cpdStatementModal").classList.add("open");
+}
+function closeCpdStatementModal(){document.getElementById("cpdStatementModal").classList.remove("open")}
+async function edgeFunctionErrorMessage(error){
+ let msg=error?.message||"Unknown Edge Function error";
+ try{if(error?.context){const body=await error.context.json();if(body?.error)msg=body.error}}catch{}
+ return msg;
+}
+async function generateCpdStatement(){
+ if(!document.getElementById("cpdStatementAttest").checked)return alert("Please complete the annual attestation before generating the final statement.");
+ const btn=document.getElementById("generateStatementBtn");if(btn){btn.disabled=true;btn.textContent="Generating…"}
+ const {data,error}=await db.functions.invoke("create-haem-cpd-statement",{body:{year:cpdSelectedYear(),attested:true}});
+ if(btn){btn.disabled=false;btn.textContent="Generate & download PDF"}
+ if(error)return alert("CPD statement could not be generated: "+await edgeFunctionErrorMessage(error));
+ if(!data?.statement)return alert("The statement function returned no statement snapshot.");
+ closeCpdStatementModal();await loadCpdData();renderCpd();downloadCpdStatementPdf(data.statement);
+}
+function statementById(id){return cpdStatements.find(x=>x.id===id)||null}
+function downloadCpdStatementPdfById(id){const x=statementById(id);if(x)downloadCpdStatementPdf(x)}
+function downloadCpdAuditCsvById(id){const x=statementById(id);if(x)downloadCpdAuditCsv(x)}
+function pdfSafe(s){return String(s??"").replace(/[–—]/g,"-").replace(/↔/g,"vs").replace(/[“”]/g,'"').replace(/[‘’]/g,"'")}
+function statementHours(sec){return ((Number(sec)||0)/3600).toFixed(2)}
+function statementGroupHours(summary,framework,key){return statementHours(summary?.[framework]?.groups?.[key]||0)}
+function downloadCpdStatementPdf(statement){
+ if(!window.jspdf?.jsPDF)return alert("PDF library is unavailable. Refresh the page and try again.");
+ const {jsPDF}=window.jspdf,doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"}),s=statement.summary_json||{},req=s.annual_requirements||{};
+ const W=210,M=14,R=W-M,y0=14;let y=y0;
+ doc.setTextColor(85,48,95);doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text("HAEM CONSULT",M,y);y+=6;doc.setFontSize(18);doc.text("CPD Activity & Evidence Statement",M,y);y+=6;
+ doc.setFont("helvetica","normal");doc.setTextColor(47,51,56);doc.setFontSize(9);doc.text(`${statement.cpd_year} CPD year - participant-generated evidence snapshot`,M,y);y+=7;
+ doc.setDrawColor(220);doc.line(M,y,R,y);y+=6;
+ const meta=[["Participant",statement.participant_name],["Role",statement.participant_role],["Statement ID",statement.statement_id],["Generated",new Date(statement.generated_at).toLocaleString()],["Framework version",statement.framework_rule_version]];
+ doc.setFontSize(8.5);for(const [k,val] of meta){doc.setFont("helvetica","bold");doc.text(pdfSafe(k)+":",M,y);doc.setFont("helvetica","normal");doc.text(pdfSafe(val),48,y);y+=4.6}y+=2;
+ doc.setFillColor(250,247,251);doc.roundedRect(M,y,R-M,18,2,2,"F");doc.setTextColor(85,48,95);doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text(`${statementHours(statement.unique_active_seconds)} h`,M+5,y+8);doc.setFontSize(8);doc.setTextColor(47,51,56);doc.text("Unique confirmed active CPD time captured by Haem Consult",M+5,y+13);doc.text(`${s.activity_count||0} confirmed activities`,112,y+8);doc.text(`${s.unresolved_draft_count||0} unresolved drafts omitted`,112,y+13);y+=24;
+ function heading(t){doc.setTextColor(85,48,95);doc.setFont("helvetica","bold");doc.setFontSize(10);doc.text(t,M,y);y+=5;doc.setTextColor(47,51,56)}
+ function row(label,hours){doc.setFontSize(8.3);doc.setFont("helvetica","normal");doc.text(pdfSafe(label),M+2,y);doc.setFont("helvetica","bold");doc.text(`${hours} h`,R-2,y,{align:"right"});y+=4.3}
+ heading("RACP 2026 - suggested mapping");row("Category 1 - Educational Activities",statementGroupHours(s,"racp","1"));row("Category 2 - Reviewing Performance",statementGroupHours(s,"racp","2"));row("Category 3 - Measuring Outcomes",statementGroupHours(s,"racp","3"));
+ doc.setFontSize(7.8);doc.setFont("helvetica","normal");doc.text(`PDP recorded: ${req.pdp_recorded?"Yes":"No"}   |   Annual conversation recorded: ${req.structured_conversation_recorded?"Yes":"No"}`,M+2,y);y+=4;doc.text(`Cultural safety / health inequity activities: ${req.cultural_safety_or_health_inequity_activities||0}   |   Ethics / professional behaviour activities: ${req.ethics_or_professionalism_activities||0}`,M+2,y);y+=6;
+ heading("RCPA Australia 2026 - suggested mapping");row("Category A - Educational",statementGroupHours(s,"rcpa","A"));row("Category B - Reviewing Performance",statementGroupHours(s,"rcpa","B"));row("Category C - Measuring Outcomes",statementGroupHours(s,"rcpa","C"));
+ const codes=s?.rcpa?.codes||{},codeText=Object.keys(codes).sort().map(k=>`${k} ${statementHours(codes[k])} h`).join("; ")||"None";doc.setFontSize(7.5);doc.setFont("helvetica","normal");const codeLines=doc.splitTextToSize("RCPA codes represented: "+pdfSafe(codeText),R-M-4);doc.text(codeLines,M+2,y);y+=codeLines.length*3.5+1;
+ const d=req.domains||{};doc.text(`CAPE flags - Cultural safety ${d.cultural_safety||0}; Health inequity ${d.health_inequity||0}; Professionalism ${d.professionalism||0}; Ethics ${d.ethics||0}`,M+2,y);y+=6;
+ heading("Methodology and attestation");doc.setFont("helvetica","normal");doc.setFontSize(7.4);const meth=doc.splitTextToSize(pdfSafe(s.methodology||""),R-M);doc.text(meth,M,y);y+=meth.length*3.4+2;const att=doc.splitTextToSize(pdfSafe(statement.attestation_text||""),R-M);doc.text(att,M,y);y+=att.length*3.4+3;
+ doc.setDrawColor(220);doc.line(M,y,R,y);y+=4;doc.setFontSize(6.8);doc.text("Suggested self-reported mappings only. Haem Consult is not RACP- or RCPA-endorsed and does not determine College eligibility. No patient identifiers or clinical case details are included in this statement.",M,y,{maxWidth:R-M});y+=8;doc.text(`Evidence SHA-256: ${statement.evidence_hash}`,M,y,{maxWidth:R-M});y+=4;doc.text(`Statement: ${statement.statement_id}`,M,y);
+ doc.save(`Haem_Consult_CPD_${statement.cpd_year}_${statement.statement_id}.pdf`);
+}
+function csvCell(value){let s=String(value??"");if(/^[=+\-@]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"'}
+function downloadCpdAuditCsv(statement){
+ const rows=[["Statement ID","CPD Year","Activity Date","Activity","Active Hours","Excluded Idle Minutes","RACP Category","RACP Mapped Hours","RCPA Category","RCPA Mapped Hours","Reflection Recorded","Action Recorded","Domain Flags","Internal Evidence Reference"]];
+ for(const e of statement.ledger_json||[])rows.push([statement.statement_id,statement.cpd_year,e.activity_date,e.activity_label,statementHours(e.active_seconds),((Number(e.idle_seconds)||0)/60).toFixed(1),`${e.racp?.category_code||""} ${e.racp?.category_label||""}`,statementHours(e.racp?.mapped_seconds),`${e.rcpa?.category_code||""} ${e.rcpa?.category_label||""}`,statementHours(e.rcpa?.mapped_seconds),e.reflection_recorded?"Yes":"No",e.action_recorded?"Yes":"No",(e.domain_flags||[]).join("; "),e.source_reference||""]);
+ const csv=rows.map(r=>r.map(csvCell).join(",")).join("\r\n"),blob=new Blob([csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=`Haem_Consult_CPD_Audit_${statement.cpd_year}_${statement.statement_id}.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function renderPracticeAnalytics(){
+ const el=document.getElementById("practiceAnalytics");if(!el)return;
+ if(!currentProfile){el.innerHTML='<div class="small">Sign in to view practice analytics.</div>';return}
+ if(testMode){el.innerHTML='<div class="small">Practice analytics and CPD recording are unavailable in Test Trainee Mode.</div>';return}
+ if(!practiceAnalytics){el.innerHTML='<div class="small">Practice analytics are not available at present.</div>';return}
+ const p=practiceAnalytics.personal||{},total=Number(p.completed_reviews||0);
+ const role=practiceAnalytics.role||currentProfile.role;
+ const guidelineLabel=role==="Consultant"?"Your consultant ↔ guideline":"Consultant review ↔ guideline";
+ const traineeLabel=role==="Trainee"?"Your trainee plan ↔ guideline":"Trainee plan ↔ guideline";
+ const topics=(practiceAnalytics.topics||[]).map(t=>`<tr><td>${esc(t.problem)}</td><td>${esc(t.cases)}</td><td>${metricValue(t.avg_trainee_concordance,"%")}</td><td>${metricValue(t.avg_consultant_concordance,"%")}</td><td>${esc(t.agree_count||0)}/${esc(t.modify_count||0)}/${esc(t.disagree_count||0)}</td></tr>`).join("");
+ const months=(practiceAnalytics.monthly_trend||[]).map(m=>`<tr><td>${esc(m.month_key)}</td><td>${esc(m.reviews)}</td><td>${metricValue(m.avg_trainee_concordance,"%")}</td><td>${metricValue(m.avg_consultant_concordance,"%")}</td></tr>`).join("");
+ const peer=practiceAnalytics.peer_benchmark||{};
+ let peerHtml="";
+ if(peer.available&&peer.summary){
+   const ps=peer.summary;
+   peerHtml=`<div class="practice-note"><b>Privacy-thresholded peer consultant comparison available</b><div class="tiny" style="margin-top:5px">Aggregate includes ${esc(peer.peer_clinicians)} other consultants and ${esc(peer.peer_reviews)} reviews. No individual peer data are shown.</div><div class="practice-grid"><div class="practice-metric"><div class="small">Your consultant ↔ guideline</div><div class="pv">${metricValue(p.avg_consultant_concordance,"%")}</div></div><div class="practice-metric"><div class="small">Peer aggregate ↔ guideline</div><div class="pv">${metricValue(ps.avg_consultant_concordance,"%")}</div></div><div class="practice-metric"><div class="small">Peer review decisions A/M/D</div><div class="pv" style="font-size:17px">${esc(ps.agree_count||0)} / ${esc(ps.modify_count||0)} / ${esc(ps.disagree_count||0)}</div></div></div></div>`;
+ }else{
+   peerHtml=`<div class="practice-withheld"><b>Peer benchmark withheld</b><div class="tiny" style="margin-top:5px">${esc(peer.reason||"Insufficient aggregate data.")} Current threshold progress: ${esc(peer.peer_clinicians||0)}/${esc(peer.minimum_peer_clinicians||5)} other consultants and ${esc(peer.peer_reviews||0)}/${esc(peer.minimum_peer_reviews||20)} peer reviews.</div></div>`;
+ }
+ const reviewButton=practiceAnalytics.practice_review_available?`<button class="btn primary" type="button" onclick="startCpdPracticeReview()">${peer.available?"Start CPD benchmark review":"Start CPD personal practice review"}</button>`:`<button class="btn secondary" type="button" disabled>Practice review available after ${esc(practiceAnalytics.practice_review_minimum_cases||2)} completed cases</button>`;
+ const mapping=peer.available?"RACP Category 3 · RCPA C6":"RACP Category 3 · RCPA C2";
+ el.innerHTML=`<div class="practice-grid">
+   <div class="practice-metric"><div class="small">Cases in scope</div><div class="pv">${esc(p.cases_in_scope||0)}</div></div>
+   <div class="practice-metric"><div class="small">Completed consultant reviews</div><div class="pv">${esc(p.completed_reviews||0)}</div></div>
+   <div class="practice-metric"><div class="small">Guideline analyses</div><div class="pv">${esc(p.guideline_analyses||0)}</div></div>
+ </div>
+ <div class="result"><b>Consultant review decision pattern</b><div class="tiny" style="margin-top:4px">Agree/Modify/Disagree describes the consultant response to the trainee plan; it is not a grade.</div><div class="decision-grid"><div class="decision-box"><b>${esc(p.agree_count||0)}</b><div class="tiny">Agree · ${pctPart(p.agree_count,total)}</div></div><div class="decision-box"><b>${esc(p.modify_count||0)}</b><div class="tiny">Modify · ${pctPart(p.modify_count,total)}</div></div><div class="decision-box"><b>${esc(p.disagree_count||0)}</b><div class="tiny">Disagree · ${pctPart(p.disagree_count,total)}</div></div></div></div>
+ <div class="result"><b>Guideline-concordance summaries</b><div class="practice-grid"><div class="practice-metric"><div class="small">${esc(traineeLabel)}</div><div class="pv">${metricValue(p.avg_trainee_concordance,"%")}</div></div><div class="practice-metric"><div class="small">${esc(guidelineLabel)}</div><div class="pv">${metricValue(p.avg_consultant_concordance,"%")}</div></div><div class="practice-metric"><div class="small">Guideline coverage</div><div class="pv">${metricValue(p.avg_guideline_coverage,"%")}</div></div></div><div class="tiny">Average across completed case-specific analyses. These metrics summarise concordance with selected applicable guidance and do not represent percentage-correct clinical care. Mean guideline-source agreement: ${metricValue(p.avg_guideline_agreement,"%")}.</div></div>
+ ${peerHtml}
+ ${(practiceAnalytics.topics||[]).length?`<div class="result"><b>By clinical topic</b><table class="practice-table"><thead><tr><th>Topic</th><th>Cases</th><th>Trainee ↔ guideline</th><th>Consultant ↔ guideline</th><th>A/M/D</th></tr></thead><tbody>${topics}</tbody></table></div>`:""}
+ ${(practiceAnalytics.monthly_trend||[]).length?`<div class="result"><b>Trend by month</b><table class="practice-table"><thead><tr><th>Month</th><th>Reviews</th><th>Trainee ↔ guideline</th><th>Consultant ↔ guideline</th></tr></thead><tbody>${months}</tbody></table></div>`:""}
+ <div class="toolbar">${reviewButton}</div><div class="tiny">If confirmed after reflection, this deliberate review maps to ${esc(mapping)}. The timer counts only active, focused review time.</div>`;
+}
+
+function renderCpd(){
+ renderCpdProgress();renderYearEndReporting();renderPracticeAnalytics();
+ const list=document.getElementById("cpdEventList");if(!list)return;
+ if(!currentProfile){list.innerHTML='<div class="small">Sign in to view CPD evidence.</div>';return}
+ if(testMode){list.innerHTML='<div class="small">CPD recording is unavailable in Test Trainee Mode.</div>';return}
+ const confirmed=cpdEvents.filter(e=>e.status==="confirmed");
+ const drafts=cpdEvents.filter(e=>e.status==="draft");
+ const totalSeconds=confirmed.reduce((s,e)=>s+(Number(e.active_seconds)||0),0);
+ const h=document.getElementById("cpdConfirmedHours"),d=document.getElementById("cpdDraftCount"),n=document.getElementById("cpdConfirmedCount");
+ if(h)h.textContent=`${cpdHours(totalSeconds)} h`;if(d)d.textContent=drafts.length;if(n)n.textContent=confirmed.length;
+ if(!cpdEvents.length){list.innerHTML='<div class="small">No CPD evidence recorded yet. Use the CPD review buttons in the Case archive to deliberately time an eligible activity.</div>';return}
+ list.innerHTML=cpdEvents.map(e=>{
+   const refl=cpdReflectionFor(e.id);
+   const statusLabel=e.status==="confirmed"?"Confirmed CPD":e.status==="excluded"?"Excluded":"Draft — review required";
+   const buttons=e.status==="draft"?`<button class="btn primary" type="button" onclick="openCpdConfirm('${e.id}')">Review & confirm</button><button class="btn secondary" type="button" onclick="excludeCpdEvent('${e.id}')">Exclude</button>`:"";
+   const domains=[e.cultural_safety&&"Cultural safety",e.health_inequity&&"Health inequity",e.professionalism&&"Professionalism",e.ethics&&"Ethics"].filter(Boolean);
+   return `<div class="cpd-event ${esc(e.status)}">
+     <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+       <div><b>${esc(cpdActivityLabel(e.activity_type))}</b><div class="tiny">${esc(e.activity_date)}${e.case_id?` · Case ${esc(e.case_id)}`:""}</div></div>
+       <div style="text-align:right"><b>${esc(cpdFormatSeconds(e.active_seconds))}</b><div class="tiny">${esc(statusLabel)}</div></div>
+     </div>
+     <div class="small" style="margin-top:7px">${esc(e.description||"")}</div>
+     <div class="cpd-map">${cpdMappingHtml(e)}</div>
+     ${e.idle_seconds?`<div class="tiny" style="margin-top:6px">Excluded paused/idle time: ${esc(cpdFormatSeconds(e.idle_seconds))}</div>`:""}
+     ${refl?.reflection_text?`<div class="tiny" style="margin-top:7px"><b>Reflection:</b> ${esc(refl.reflection_text)}</div>`:""}
+     ${refl?.action_text?`<div class="tiny" style="margin-top:4px"><b>Action:</b> ${esc(refl.action_text)}</div>`:""}
+     ${domains.length?`<div class="tiny" style="margin-top:5px"><b>Domain flags:</b> ${esc(domains.join(", "))}</div>`:""}
+     ${e.status==="excluded"&&e.exclusion_reason?`<div class="tiny" style="margin-top:5px"><b>Excluded:</b> ${esc(e.exclusion_reason)}</div>`:""}
+     ${buttons?`<div class="toolbar">${buttons}</div>`:""}
+   </div>`;
+ }).join("");
+}
+let cpdConfirmEventId=null;
+function openCpdConfirm(eventId){
+ const e=cpdEvents.find(x=>x.id===eventId);if(!e||e.status!=="draft")return;
+ cpdConfirmEventId=eventId;
+ const refl=cpdReflectionFor(eventId)||{};
+ document.getElementById("cpdConfirmSummary").innerHTML=`<b>${esc(cpdActivityLabel(e.activity_type))}</b> · ${esc(cpdFormatSeconds(e.active_seconds))} active time${e.case_id?` · Case ${esc(e.case_id)}`:""}<div class="cpd-map">${cpdMappingHtml(e)}</div>`;
+ const required=document.getElementById("cpdReflectionRequired");
+ required.textContent=e.reflection_required?"A brief reflection and an influence/impact selection are required for this activity.":"Reflection is optional for this educational evidence-review activity.";
+ document.getElementById("cpdInfluence").value=refl.influence||"";
+ document.getElementById("cpdReflectionText").value=refl.reflection_text||"";
+ document.getElementById("cpdActionText").value=refl.action_text||"";
+ document.getElementById("cpdDomainNote").value=refl.domain_note||"";
+ ["cultural_safety","health_inequity","professionalism","ethics"].forEach(k=>{document.getElementById("cpd_"+k).checked=!!e[k]});
+ document.getElementById("cpdAttest").checked=false;
+ document.getElementById("cpdConfirmModal").classList.add("open");
+}
+function closeCpdConfirm(){document.getElementById("cpdConfirmModal").classList.remove("open");cpdConfirmEventId=null}
+async function confirmCpdEvent(){
+ const e=cpdEvents.find(x=>x.id===cpdConfirmEventId);if(!e)return;
+ const influence=v("cpdInfluence")||null,reflection=v("cpdReflectionText").trim(),action=v("cpdActionText").trim(),domainNote=v("cpdDomainNote").trim();
+ const flags={cultural_safety:document.getElementById("cpd_cultural_safety").checked,health_inequity:document.getElementById("cpd_health_inequity").checked,professionalism:document.getElementById("cpd_professionalism").checked,ethics:document.getElementById("cpd_ethics").checked};
+ if(e.reflection_required && (!influence||reflection.length<10))return alert("Please select how the activity influenced you and enter a brief reflection of at least 10 characters.");
+ if(Object.values(flags).some(Boolean)&&domainNote.length<10)return alert("Please briefly explain why the selected cultural safety / equity / professionalism / ethics domain applies.");
+ if(!document.getElementById("cpdAttest").checked)return alert("Please confirm that this was genuine professional-development activity and that the recorded time reasonably reflects your active engagement.");
+ if(reflection||action||influence||domainNote||Object.values(flags).some(Boolean)){
+   const {error:re}=await db.from("haem_cpd_reflections").upsert({event_id:e.id,influence,reflection_text:reflection,action_text:action,domain_note:domainNote},{onConflict:"event_id"});
+   if(re)return alert("CPD reflection was not saved: "+re.message);
+ }
+ const {error}=await db.from("haem_cpd_events").update({status:"confirmed",reflection_completed:reflection.length>=10,participant_confirmed_at:new Date().toISOString(),exclusion_reason:null,...flags}).eq("id",e.id);
+ if(error)return alert("CPD activity could not be confirmed: "+error.message);
+ closeCpdConfirm();await loadCpdData();renderCpd();
+ alert(`CPD activity confirmed: ${cpdFormatSeconds(e.active_seconds)}. The same active time is mapped separately to RACP and RCPA and is not double-counted.`);
+}
+async function excludeCpdEvent(eventId){
+ const e=cpdEvents.find(x=>x.id===eventId);if(!e||e.status!=="draft")return;
+ const reason=prompt("Why should this draft be excluded from CPD? (for example: test activity, routine clinical work, accidental timer)","Pilot/test activity");
+ if(reason===null)return;
+ if(reason.trim().length<3)return alert("Please enter a brief exclusion reason.");
+ const {error}=await db.from("haem_cpd_events").update({status:"excluded",exclusion_reason:reason.trim(),participant_confirmed_at:new Date().toISOString()}).eq("id",eventId);
+ if(error)return alert("CPD draft could not be excluded: "+error.message);
+ await loadCpdData();renderCpd();
+}
+
+function renderDashboard(){
+ document.getElementById("nCases").textContent=cases.length;
+ document.getElementById("nReviewed").textContent=cases.filter(x=>x.status==="reviewed").length;
+ document.getElementById("nPending").textContent=cases.filter(x=>x.status!=="reviewed").length;
+ document.getElementById("nProfiles").textContent=profiles.length;
+}
+function renderAll(){
+ const tb=document.getElementById("testBanner");if(tb)tb.style.display=testMode?"block":"none";
+ renderUsers();renderQueue();renderArchive();renderProfiles();renderDomainList();renderCpd();renderDashboard();updateNextId();renderCpdTimer()
+}
+
+if(initDatabase()){
+  db.auth.onAuthStateChange((event,session)=>{
+    currentUser=session?.user||null;
+    if(event==="PASSWORD_RECOVERY"){
+      setTimeout(()=>{
+        const pc=document.getElementById("passwordCard");
+        if(pc){
+          pc.style.display="block";
+          document.getElementById("passwordTitle").textContent="Choose a new password";
+          document.getElementById("passwordHelp").textContent="Enter a new password below to complete password recovery.";
+        }
+      },0);
+    }
+    setTimeout(()=>refreshAuth(),0);
+  });
+
+  db.channel("haem-auth-live")
+    .on("postgres_changes",{event:"*",schema:"public",table:"haem_cases"},()=>{if(currentUser)refreshAuth()})
+    .on("postgres_changes",{event:"*",schema:"public",table:"haem_profiles"},()=>{if(currentUser)refreshAuth()})
+    .on("postgres_changes",{event:"*",schema:"public",table:"haem_case_reviews"},()=>{if(currentUser)refreshAuth()})
+    .on("postgres_changes",{event:"*",schema:"public",table:"haem_cpd_events"},()=>{if(currentUser)loadCpdData().then(renderCpd)})
+    .on("postgres_changes",{event:"*",schema:"public",table:"haem_cpd_reflections"},()=>{if(currentUser)loadCpdData().then(renderCpd)})
+    .on("postgres_changes",{event:"INSERT",schema:"public",table:"haem_cpd_statements"},()=>{if(currentUser)loadCpdData().then(renderCpd)})
+    .subscribe();
+
+  renderExperienceOptions();
+  loadDomains().then(refreshAuth);
+}else{
+  renderExperienceOptions();
+  renderAuthUI();
+  renderAll();
+}
+</script>
+<footer style="padding:24px;text-align:center;font:11px Arial;color:#6d737a">Haem Consult test build · Supabase backend · GitHub Pages frontend · Build 2026-08-21-1711</footer>
+
+<div id="privacyModal" class="modalbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="privacyModalTitle">
+    <div class="k">Patient privacy screen</div>
+    <h2 id="privacyModalTitle">Review submission</h2>
+    <div id="privacyModalSummary" class="small"></div>
+    <div id="privacyFindings" style="margin-top:10px"></div>
+    <div class="tiny" style="margin-top:12px">Automated screening reduces risk but cannot guarantee de-identification. Do not submit information that could reasonably identify an individual patient.</div>
+    <div class="toolbar">
+      <button id="privacyEditBtn" class="btn secondary" type="button">Return to edit</button>
+      <button id="privacyContinueBtn" class="btn primary" type="button" style="display:none">Acknowledge and continue</button>
+    </div>
+  </div>
+</div>
+
+<div id="consultantModal" class="modalbackdrop" onclick="modalBackdropClick(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="consultantModalTitle">
+    <div class="k">Case destination</div>
+    <h2 id="consultantModalTitle">Submit to which consultant?</h2>
+    <div class="small">Select one or more registered active consultants. Each consultant gets an independent review record and sees the case in their own pending review queue.</div>
+    <div id="consultantChoices"></div>
+    <div class="toolbar">
+      <button class="btn primary" id="confirmConsultantSubmit" onclick="confirmConsultantSubmission()" disabled>Select at least one consultant</button>
+      <button class="btn secondary" onclick="closeConsultantSelector()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="cpdConfirmModal" class="modalbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cpdConfirmTitle">
+    <div class="k">CPD confirmation</div><h2 id="cpdConfirmTitle">Review & confirm activity</h2>
+    <div id="cpdConfirmSummary" class="small"></div>
+    <div id="cpdReflectionRequired" class="tiny" style="margin-top:9px"></div>
+    <label>How did this activity influence your practice or view?</label>
+    <select id="cpdInfluence">
+      <option value="">Select if applicable</option>
+      <option value="confirmed_approach">Confirmed my approach</option>
+      <option value="modified_approach">Modified my approach</option>
+      <option value="changed_approach">Changed my approach</option>
+      <option value="reasonable_variation">Highlighted reasonable variation in practice</option>
+      <option value="learning_only">Educational review / learning only</option>
+      <option value="other">Other</option>
+    </select>
+    <label>What did you notice or learn?</label>
+    <textarea id="cpdReflectionText" placeholder="Brief reflection — required for peer-feedback activities, optional for evidence review."></textarea>
+    <label>Action / next step (optional)</label>
+    <textarea id="cpdActionText" placeholder="For example: review thrombocytopenia anticoagulation thresholds or discuss local practice at a departmental meeting."></textarea>
+    <label>Mandatory-domain flags (only select when genuinely relevant)</label>
+    <div class="cpd-domain-grid">
+      <label class="cpd-check"><input id="cpd_cultural_safety" type="checkbox">Cultural safety</label>
+      <label class="cpd-check"><input id="cpd_health_inequity" type="checkbox">Health inequity</label>
+      <label class="cpd-check"><input id="cpd_professionalism" type="checkbox">Professionalism</label>
+      <label class="cpd-check"><input id="cpd_ethics" type="checkbox">Ethics</label>
+    </div>
+    <label>If a mandatory-domain flag is selected, why does it apply?</label>
+    <textarea id="cpdDomainNote" placeholder="A brief explanation is required when any domain flag is selected."></textarea>
+    <label class="cpd-check" style="margin-top:12px"><input id="cpdAttest" type="checkbox">I confirm this was genuine professional-development activity and that the recorded active time reasonably reflects my engagement.</label>
+    <div class="toolbar">
+      <button class="btn primary" type="button" onclick="confirmCpdEvent()">Confirm CPD activity</button>
+      <button class="btn secondary" type="button" onclick="closeCpdConfirm()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="annualCpdModal" class="modalbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="annualCpdModalTitle">
+    <div class="k">Annual CPD evidence</div><h2 id="annualCpdModalTitle">Record annual requirement activity</h2>
+    <div class="small">Enter the actual time you spent. This creates a draft only; it must then be reflected on and confirmed before it contributes CPD hours or annual-requirement status.</div>
+    <label>Activity</label><select id="annualCpdType" onchange="updateAnnualCpdHelp()"><option value="pdp_review">Annual self-review / PDP</option><option value="annual_structured_conversation">Annual structured conversation</option></select>
+    <div class="row"><div><label>Date</label><input id="annualCpdDate" type="date" min="2026-01-01" max="2026-12-31"></div><div><label>Actual duration (minutes)</label><input id="annualCpdMinutes" type="number" min="1" step="1"></div></div>
+    <div id="annualCpdHelp" class="tiny" style="margin-top:8px"></div>
+    <div class="toolbar"><button class="btn primary" type="button" onclick="saveAnnualCpdDraft()">Save draft & reflect</button><button class="btn secondary" type="button" onclick="closeAnnualCpdModal()">Cancel</button></div>
+  </div>
+</div>
+
+<div id="cpdStatementModal" class="modalbackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="cpdStatementModalTitle">
+    <div class="k">Final year-end snapshot</div><h2 id="cpdStatementModalTitle">Generate CPD Activity & Evidence Statement</h2>
+    <div id="cpdStatementSummary" class="small"></div>
+    <div class="practice-note"><b>What the snapshot contains</b><div class="tiny" style="margin-top:5px">Confirmed active time, suggested RACP/RCPA mappings, annual-requirement evidence counts, framework version, statement ID and evidence hash. The one-page PDF excludes case IDs, diagnoses, reflections and other clinical content. A separate audit CSV contains activity metadata and internal evidence references only.</div></div>
+    <label class="cpd-check" style="margin-top:12px"><input id="cpdStatementAttest" type="checkbox">I confirm this record reasonably reflects the professional-development activity I undertook, I have reviewed the status of outstanding draft evidence, and I understand that I remain responsible for determining eligibility under the current RACP and RCPA CPD rules.</label>
+    <div class="toolbar"><button id="generateStatementBtn" class="btn primary" type="button" onclick="generateCpdStatement()">Generate & download PDF</button><button class="btn secondary" type="button" onclick="closeCpdStatementModal()">Cancel</button></div>
+  </div>
+</div>
+
+</body></html>
